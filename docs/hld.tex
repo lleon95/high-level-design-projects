@@ -160,7 +160,6 @@
 
 
 \input{macros}
-\usepackage{KITcolors}
 
 \begin{document}
 
@@ -174,19 +173,19 @@
 
 
 \author{
-  \IEEEauthorblockN{Luis Le\'{o}n\tec, Emmanuel Madrigal\tec, Eli\'eser\tec }
+  \IEEEauthorblockN{Luis León\tec, Emmanuel Madrigal\tec, Eliéser\tec }
   \vspace{3pt}
   %
   \IEEEauthorblockA{
     \begin{tabular}{c}
-      {\tec} Instituto Tecnol\'ogico de Costa Rica (TEC), Costa Rica \\
+      {\tec} Instituto Tecnológico de Costa Rica (TEC), Costa Rica \\
 	  \end{tabular}
 	}
 	%
 	\vspace{3pt}
 	\IEEEauthorblockA{
   \begin{tabular}{ccc}
-    \{lleon95, \}@estudiantec.cr & & \{nobody, \}@gmail.com
+    \{lleon95, emmadrigal\}@estudiantec.cr & & \{nobody, \}@gmail.com
   \end{tabular}
 	}
 %\vspace{50pt}
@@ -220,22 +219,30 @@ DSP
 \label{sec:introduction}
 
 
+
+
+
+
 % ------------------------------- PRE-DESIGN --------------------------------- %
 
 \section{Particionamiento HW/SW}
 \label{sec:partitioning}
 
+El particionamiento será realizado de una manera funcional, es decir se iniciara con las distintas
+funcionalidades a implementar y luego se tomará se decidirá en según la funcionalidad y los
+requerimientos establecidos para decidir si el módulo será implementado en hardware o en software.
+
 \subsection{Especificación}
 
-El procesador de video debe recibir la imagen de una fuente de video en VGA y \
-entregarla tambi\'en en dicho est\'andar. El procesamiento de la imagen debe  \
-ser en tiempo real, lo que implica que el procesamiento al que se someta la \ 
-imagen debe aportar un retraso en la imagen de salida que sea casi  \ 
+El procesador de video debe recibir la imagen de una fuente de video en VGA y 
+entregarla también en dicho formato. El procesamiento de la imagen debe 
+ser en tiempo real, lo que implica que el procesamiento al que se someta la 
+imagen debe aportar un retraso en la imagen de salida que sea casi 
 imperceptible ante el ojo humano.
 
-El procesamiento de video llevar\'a a cabo un escalamiento a grises y, \
-tentativamente, un resaltamiento de bordes usando un filtro \emph{Sobel}. \ 
-Un ejemplo de entrada y salida del procesador de video es como se presenta \
+El procesamiento de video llevará a cabo una conversion a escala de grises y, 
+tentativamente, un resaltamiento de bordes usando un filtro \emph{Sobel}. 
+Un ejemplo de entrada y salida del procesador de video es como se presenta 
 en la figura \ref{fig:processing_unit_example}.
 
 \begin{figure}[!h]
@@ -243,43 +250,43 @@ en la figura \ref{fig:processing_unit_example}.
   \begin{subfigure}{0.45\columnwidth}
     \centering
     \includegraphics[width=\columnwidth]{img/bike_gray.jpg}
-    \caption{Grayscale image at video processing input}
+    \caption{Imagen en escala de grises de entrada}
     \label{fig:bike_gray}
   \end{subfigure}
   \hfill
   \begin{subfigure}{0.45\columnwidth}
       \centering
       \includegraphics[width=\columnwidth]{img/bike_sobel.jpg}
-      \caption{Output at the video processing unit}
+      \caption{Salida del modulo de procesamiento de video}
       \label{fig:bike_sobel}
   \end{subfigure}
   \hfill
-    \caption{Example of the proposed video processing}
+    \caption{Ejemplo del procesamiento de video propuesto}
     \label{fig:processing_unit_example}
 \end{figure}
 
-De lo anterior, se deriva el dise\~no tentativo para la aplicaci\'on \ 
+De lo anterior, se deriva el diseño tentativo para la aplicación 
 presentado en la figura \ref{fig:block_diagram}.
 
 \begin{figure}
   \centering
   \includegraphics[width=0.25\columnwidth]{img/block_diagram.pdf}
-  \caption{Diagrama de bloques de la soluci\'on}
+  \caption{Diagrama de bloques de la solución}
   \label{fig:block_diagram}
 \end{figure}
 
-Tentativamente, el streaming desde el decodificador digital hasta el \ 
-procesador de video es realizado a trav\'es de una FIFO, eso para acoplar \ 
-las velocidades de los diversos m\'odulos. Igualmente, esto se ve reflejado \
-para el caso del codificador.
+Tentativamente, el streaming desde el decodificador digital hasta el 
+procesador de video es realizado a través de un modulo FIFO, eso para acoplar 
+las velocidades de los diversos módulos. Igualmente, esto se ve reflejado 
+para el caso del codificador.%Este "se ve reflejado" no queda claro en ningun lado
 
 \subsection{Requerimientos}
 
 \begin{itemize}
-  \item \textbf{I/O Framerate}: 60Hz
-  \item \textbf{I/O Image size}: 640x480 (estand\'ar VGA)
-  \item \textbf{Transmisi\'on}: Real-time (retraso m\'aximo: 100ms)
-  \item \textbf{Presupuesto}: < USD 1000
+  \item \textbf{I/O Framerate}: $60\ Hz$
+  \item \textbf{I/O Image size}: $640\times480$ (estandar VGA)
+  \item \textbf{Transmisión}: Real-time (latencia máxima: $10\ ms$)
+  \item \textbf{Presupuesto}: $< \$ 1000$
 \end{itemize}
 
 
