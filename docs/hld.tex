@@ -224,16 +224,13 @@ DSP
 
 
 % ------------------------------- PRE-DESIGN --------------------------------- %
+\section{Especificación y Requerimientos}
+\label{sec:req}
 
-\section{Particionamiento HW/SW}
-\label{sec:partitioning}
+\subsection{Requerimientos}
 
-El particionamiento será realizado de una manera funcional, es decir se iniciara con las distintas
-funcionalidades a implementar y luego se tomará se decidirá en según la funcionalidad y los
-requerimientos establecidos para decidir si el módulo será implementado en hardware o en software.
-
-\subsection{Especificación}
-
+En este proyecto se implementará un sistema de procesamiento de video descrito a
+continuacion.
 El procesador de video debe recibir la imagen de una fuente de video en VGA y 
 entregarla también en dicho formato. El procesamiento de la imagen debe 
 ser en tiempo real, lo que implica que el procesamiento al que se someta la 
@@ -265,7 +262,20 @@ en la figura \ref{fig:processing_unit_example}.
     \label{fig:processing_unit_example}
 \end{figure}
 
-De lo anterior, se deriva el diseño tentativo para la aplicación 
+El sistema además tendra los siguientes requerimientos:
+
+\begin{itemize}
+  \item \textbf{Cuadros procesados por segundo}: $60\ Hz$
+  \item \textbf{Tamaño de imagen}: $640\times480$ (estandar VGA)
+  \item \textbf{Transmisión}: Real-time (latencia máxima: $10\ ms$)
+  \item \textbf{Presupuesto}: $< \$ 1000$
+\end{itemize}
+
+
+\section{Diseño}
+\label{sec:design}
+
+Basado en los requerimientos de la sección \ref{sec:req} se deriva el diseño tentativo para la aplicación 
 presentado en la figura \ref{fig:block_diagram}.
 
 \begin{figure}
@@ -280,18 +290,23 @@ procesador de video es realizado a través de un modulo FIFO, eso para acoplar
 las velocidades de los diversos módulos. Igualmente, esto se ve reflejado 
 para el caso del codificador.%Este "se ve reflejado" no queda claro en ningun lado
 
-\subsection{Requerimientos}
 
-\begin{itemize}
-  \item \textbf{I/O Framerate}: $60\ Hz$
-  \item \textbf{I/O Image size}: $640\times480$ (estandar VGA)
-  \item \textbf{Transmisión}: Real-time (latencia máxima: $10\ ms$)
-  \item \textbf{Presupuesto}: $< \$ 1000$
-\end{itemize}
+\section{Particionamiento de HW/SW}
+\label{sec:partitioning}
+
+El particionamiento será realizado de una manera funcional, es decir se iniciara con las distintas
+funcionalidades a implementar y luego se tomará se decidirá en según la funcionalidad y los
+requerimientos establecidos para decidir si el módulo será implementado en hardware o en software.
+
+Tanto el módulo de ADC (Convertidor analógico a digital por sus siglas en inglés) como el módulo de DAC
+(Convertidor digital a analógico por sus siglas en inglés son módulosde señal mixta por lo que deberán
+de ser implementados en hardware.
+
+Los otros tres modulos pueden ser implementados tanto en hardware como en software. Por lo que debe de
+tomarse una decisión sobre como serán implementados. %TODO escribir justificación para implementacion en HW o SW
 
 
-\subsection{Particionamiento}
-
+\section{Conclusiones y Recomendaciones}
 
 %------------------------------ CONCLUSIONS -----------------------------------%
 
