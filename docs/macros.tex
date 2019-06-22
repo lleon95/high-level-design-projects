@@ -1,0 +1,356 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Author:  Jorge Castro-Godínez
+%
+% Chair for Embedded Systems (CES)
+% Karlsruhe Institute of Technology
+%
+% Escuela de Ingeniería Electrónica
+% Instituto Tecnológico de Costa Rica
+%
+% macros.tex
+% Macros for papers
+% 
+% email:	jorge.castro-godinez@kit.edu
+%					jocastro@tec.ac.cr
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%------------------------------ PACKAGES --------------------------------------%
+%\usepackage{mdwtab}
+%\usepackage{tabularx, booktabs}
+\usepackage{multirow}
+
+% http://tex.stackexchange.com/questions/26521/
+% how-to-change-the-spacing-between-figures-tables-and-text
+\setlength{\textfloatsep}{10pt plus 1.0pt minus 2.0pt}
+
+% To add TikZ/PGFPlots
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{pgf}
+\usepgfplotslibrary{groupplots}
+\usetikzlibrary{arrows,automata,shapes,patterns}
+\usetikzlibrary{matrix}
+%\pgfplotsset{compat=1.8}
+%\pgfplotsset{every tick label/.append style={font=\scriptsize}}
+\pgfplotsset{every tick label/.append style={font=\scriptsize}}
+\usetikzlibrary{shadows}
+
+
+\usepackage{pgfplotstable}
+\pgfplotsset{compat=1.11,
+        /pgfplots/ybar legend/.style={
+        /pgfplots/legend image code/.code={%
+        %\draw[##1,/tikz/.cd,yshift=-0.25em]
+                %(0cm,0cm) rectangle (3pt,0.8em);},
+        \draw[##1,/tikz/.cd,bar width=3pt,yshift=-0.2em,bar shift=0pt]
+                plot coordinates {(0cm,0.8em)};},
+			},
+}
+
+\usepackage{paralist}
+\usepackage{amsmath}
+\usepackage{graphicx}
+
+% For wrapping images
+\usepackage{wrapfig}
+
+% For algorithms
+%\usepackage{algorithm}
+%\usepackage{algorithmic}
+%
+%\floatname{algorithm}{Algorithm}
+%\newcommand{\algorithmicinput}{\textbf{Input:}}
+%\newcommand{\INPUT}{\item[\algorithmicinput]}
+%\newcommand{\algorithmicoutput}{\textbf{Output:}}
+%\newcommand{\OUTPUT}{\item[\algorithmicoutput]}
+%\newcommand{\algorithmicprocedure}{\hskip0.2in \textbf{Procedure:}}
+%\newcommand{\PROCEDURE}{\item[\algorithmicprocedure]}
+
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+
+\newcommand{\sfunction}[1]{\textsf{\textsc{#1}}}
+\algrenewcommand\algorithmicforall{\textbf{foreach}}
+\algrenewcommand\algorithmicindent{.8em}
+
+%\usepackage{caption}
+%\usepackage{subcaption}
+%\usepackage{subfigure}
+
+% Colors package from KIT
+\usepackage{KITcolors}
+
+% Text in color
+\usepackage{color}
+
+% For tables
+\usepackage{booktabs}
+
+% For adding comments
+\newcommand{\shafique}[1]{\textcolor{red}{Shafique: #1 :Shafique}}
+\newcommand{\jorge}[1]{\textcolor{blue}{J: #1}}
+
+
+% For adding the afiliations
+\newcommand{\superscript}[1]{\ensuremath{^{\textrm{#1}}}}
+\def\tec{$^1$}
+\def\ces{$^2$}
+\def\cestec{\superscript{1,2}}
+
+%\def\ces{\superscript{*}}
+%\def\caretech{\superscript{\dag}}
+
+
+\newcommand\encircle[1]{%
+  \tikz[baseline=(X.base)] 
+    \node (X) [draw, shape=circle, inner sep=0] {\strut #1};}
+
+
+% Subfigures
+%\usepackage[caption=false,position=bottom]{subfig}
+\usepackage[justification=Centering]{subfig}
+%\usepackage[]{subfig}
+%\usepackage{subfigure}
+%\usepackage{subcaption}
+
+
+% For code listings
+%\usepackage{listings}
+
+\usepackage[]{minted}
+%\usepackage[chapter, newfloat=true]{minted}
+\usemintedstyle{default}
+\setminted{fontsize=\scriptsize}
+
+
+%\lstset{frame=tb,
+%  language=C,
+%  aboveskip=3mm,
+%  belowskip=3mm,
+%  showstringspaces=false,
+%  columns=flexible,
+%  basicstyle={\footnotesize\ttfamily},
+%  numbers=none,
+%  numberstyle=\tiny\color{gray},
+%  keywordstyle=\color{blue},
+%  commentstyle=\color{dkgreen},
+%  stringstyle=\color{mauve},
+%  breaklines=true,
+%  breakatwhitespace=true,
+%  tabsize=3
+%}
+
+% Hyperreferences
+%\definecolor{dark-blue}{rgb}{0.15,0.15,0.4}
+%\usepackage[colorlinks = true,
+%	allcolors = dark-blue,
+%	bookmarks = false]{hyperref}
+
+\usepackage{url}
+
+% Enumerate
+\usepackage{enumitem}
+
+%\renewcommand{\arraystretch}{1.5}
+
+
+
+% Modify text height and line spacing
+%\addtolength{\textheight}{22pt}
+%\linespread{0.925}
+
+% ---------------------------- COLOR DEFINITIONS ----------------------------- %
+
+
+% ------------------------------- TIKZ BLOCKS -------------------------------- %
+
+
+% We need layers to draw the block diagram
+\pgfdeclarelayer{background}
+\pgfdeclarelayer{foreground}
+\pgfsetlayers{background,main,foreground}
+
+
+% Define a few styles and constants, for diagrams
+%\tikzstyle{ann} = [above, text width=5em, text centered]
+%\tikzstyle{textnode} = [above, text width=30em]
+%\def\blockdist{2.3}
+%\def\edgedist{2.5}
+%\tikzstyle{mpu}=[draw, fill=RdBu-11-3, text width=5.0em, 
+%    text centered, minimum height=5.0em, rounded corners]
+%\tikzstyle{accel}=[draw, fill=RdBu-11-9, text width=4.0em, 
+%    text centered, minimum height=5.0em, rounded corners]
+%\tikzstyle{sdram}=[draw, fill=RdBu-11-4, text width=6.0em, 
+%    text centered, minimum height=2.0em]
+%\tikzstyle{mem}=[draw, text width=4.0em, 
+%    text centered, minimum height=1.5em,dashed]
+%\tikzstyle{L3}=[draw, fill=RdBu-11-4, text width=7.0em, 
+%    text centered, minimum height=2.0em]
+%\tikzstyle{port}=[draw, fill=RdBu-11-4, text width=2.0em, 
+%    text centered, minimum height=2.0em]
+%\tikzstyle{block}=[draw, fill=black!20, text width=3.0em, 
+%    text centered, minimum height=3.0em, rounded corners]
+
+
+
+% ------------------------------- CASES -------------------------------------- %
+\tikzstyle{adder} = [draw, thick, circle, fill=KITblack15]
+\tikzstyle{ops} = [draw, thick, circle, fill=KITblack15]
+
+\tikzstyle{lslr} = [draw, thick, circle, fill=white]
+\tikzstyle{add} = [draw, thick, circle, fill=KITgreen30]
+
+\tikzstyle{nodeIO} = [draw=none, fill=none, text centered]
+\tikzstyle{tag} = [draw=none, fill=none, text centered]
+
+\tikzstyle{ann} = [above, text width=5em, text centered]
+\tikzstyle{textnode} = [above, text width=30em]
+
+\tikzstyle{tool}=[draw, fill=KITblue70, minimum width=7.0em, text centered, 
+	text=white]
+
+\tikzstyle{tool2}=[draw, fill=KITblue70, minimum width=6.0em, text centered, 
+	text=white]
+
+\tikzstyle{tool3}=[draw, fill=KITblue70, minimum width=5.0em, text centered, 
+	text=white, align=center]
+
+\tikzstyle{res}=[draw, minimum width=5.5em, text centered, 
+	text=black]
+
+\tikzstyle{database}=[cylinder, cylinder uses custom fill, cylinder body 
+		fill=KITgreen30, cylinder end fill=KITgreen30, shape border rotate=90,
+		aspect=0.25, draw, minimum height=1.8em, text width=1.3em, text centered]
+
+\tikzstyle{compiled} = [draw, minimum height=6.0mm, minimum width=5.0mm, 
+    text centered, fill=KITbrown30] 
+
+
+
+%\tikzstyle{tool}=[draw, fill=KITgreen50, text width=4.2em, 
+%    text centered, minimum height=3.0em, rounded corners]  
+   
+%\tikzstyle{tool2}=[draw, fill=KITblue50, text width=4.2em, 
+%    text centered, minimum height=3.0em, rounded corners]
+    
+%\tikzstyle{appSim}=[draw, fill=RdBu-11-9, text width=4.0em, 
+%    text centered, minimum height=3.0em, rounded corners]	
+
+% taken from manual
+\makeatletter
+\pgfdeclareshape{document}{
+  \inheritsavedanchors[from=rectangle] % this is nearly a rectangle
+  \inheritanchorborder[from=rectangle]
+  \inheritanchor[from=rectangle]{center}
+  \inheritanchor[from=rectangle]{north}
+  \inheritanchor[from=rectangle]{south}
+  \inheritanchor[from=rectangle]{west}
+  \inheritanchor[from=rectangle]{east}
+  % ... and possibly more
+  \backgroundpath{% this is new
+    % store lower right in xa/ya and upper right in xb/yb
+    \southwest \pgf@xa=\pgf@x \pgf@ya=\pgf@y
+    \northeast \pgf@xb=\pgf@x \pgf@yb=\pgf@y
+    % compute corner of ‘‘flipped page’’
+    \pgf@xc=\pgf@xb \advance\pgf@xc by-5pt % this should be a parameter
+    \pgf@yc=\pgf@yb \advance\pgf@yc by-5pt
+    % construct main path
+    \pgfpathmoveto{\pgfpoint{\pgf@xa}{\pgf@ya}}
+    \pgfpathlineto{\pgfpoint{\pgf@xa}{\pgf@yb}}
+    \pgfpathlineto{\pgfpoint{\pgf@xc}{\pgf@yb}}
+    \pgfpathlineto{\pgfpoint{\pgf@xb}{\pgf@yc}}
+    \pgfpathlineto{\pgfpoint{\pgf@xb}{\pgf@ya}}
+    \pgfpathclose
+    % add little corner
+    \pgfpathmoveto{\pgfpoint{\pgf@xc}{\pgf@yb}}
+    \pgfpathlineto{\pgfpoint{\pgf@xc}{\pgf@yc}}
+    \pgfpathlineto{\pgfpoint{\pgf@xb}{\pgf@yc}}
+    \pgfpathlineto{\pgfpoint{\pgf@xc}{\pgf@yc}}
+  }
+}
+\makeatother
+
+\makeatletter
+\pgfdeclareshape{documentsm}{
+  \inheritsavedanchors[from=rectangle] % this is nearly a rectangle
+  \inheritanchorborder[from=rectangle]
+  \inheritanchor[from=rectangle]{center}
+  \inheritanchor[from=rectangle]{north}
+  \inheritanchor[from=rectangle]{south}
+  \inheritanchor[from=rectangle]{west}
+  \inheritanchor[from=rectangle]{east}
+  % ... and possibly more
+  \backgroundpath{% this is new
+    % store lower right in xa/ya and upper right in xb/yb
+    \southwest \pgf@xa=\pgf@x \pgf@ya=\pgf@y
+    \northeast \pgf@xb=\pgf@x \pgf@yb=\pgf@y
+    % compute corner of ‘‘flipped page’’
+    \pgf@xc=\pgf@xb \advance\pgf@xc by-4pt % this should be a parameter
+    \pgf@yc=\pgf@yb \advance\pgf@yc by-4pt
+    % construct main path
+    \pgfpathmoveto{\pgfpoint{\pgf@xa}{\pgf@ya}}
+    \pgfpathlineto{\pgfpoint{\pgf@xa}{\pgf@yb}}
+    \pgfpathlineto{\pgfpoint{\pgf@xc}{\pgf@yb}}
+    \pgfpathlineto{\pgfpoint{\pgf@xb}{\pgf@yc}}
+    \pgfpathlineto{\pgfpoint{\pgf@xb}{\pgf@ya}}
+    \pgfpathclose
+    % add little corner
+    \pgfpathmoveto{\pgfpoint{\pgf@xc}{\pgf@yb}}
+    \pgfpathlineto{\pgfpoint{\pgf@xc}{\pgf@yc}}
+    \pgfpathlineto{\pgfpoint{\pgf@xb}{\pgf@yc}}
+    \pgfpathlineto{\pgfpoint{\pgf@xc}{\pgf@yc}}
+  }
+}
+\makeatother
+
+\tikzstyle{doc}=[draw, align=center, color=black, shape=document, 
+  minimum width=5.0mm, minimum height=6.5mm, shape=document]
+
+\tikzstyle{docsm}=[draw, align=center, color=KITbrown, fill=KITbrown,
+  shape=document, minimum width=5.0mm, minimum height=6.0mm, shape=documentsm]
+
+
+
+% BLOCKS for CNN diagram
+
+%\tikzstyle{cnn1}=[draw, fill=mywhite, text width=2.8em, 
+%    text centered, minimum height=3.4em]
+%\tikzstyle{cnn2}=[draw, fill=KITblack30, text width=2.8em, 
+%    text centered, minimum height=3.4em]
+
+%\tikzstyle{block2}=[draw, fill=KITblack30, text width=3.0em, 
+%    text centered, minimum height=3.0em, rounded corners]
+    
+    
+% BLOCKS HW accelerator
+
+%\tikzstyle{suma} = {draw, fill=KITblue70, circle, node distance=1cm}
+
+%\tikzset{%
+%  block/.style    = {draw, thick, rectangle, minimum height = 3em,
+%    minimum width = 3em},
+%  sum/.style      = {draw, circle, fill=KITblack15, node distance = 1cm}, % 
+  %Adder
+%  mult/.style     = {draw, circle, node distance = 1cm}, % Multiplier
+%  div/.style      = {draw, circle, node distance = 1cm}, % Divider
+%  input/.style    = {coordinate}, % Input
+%  output/.style   = {coordinate} % Output
+%}
+%draw, circle, node distance = 2cm
+
+%BLOCKS
+
+% styles for accelerator data path
+%\tikzstyle{regs}=[draw, fill=RdBu-11-9, text width=2.0em, 
+%    text centered, minimum height=5.5em]
+    
+%\tikzstyle{loop}=[draw, fill=RdBu-11-9, text width=2.0em, 
+%    text centered, minimum height=1.5em]
+    
+%\tikzstyle{cac}=[draw, fill=RdBu-11-9, text width=4.8em, 
+%    text centered, minimum height=2.4em, rounded corners, thick, dashed]
+
+
