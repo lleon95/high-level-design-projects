@@ -29,4 +29,5 @@ apt-get install \
     ps2eps \
     bibutils \
     gnuplot \
-    octave
+    octave \
+    python3-pygments

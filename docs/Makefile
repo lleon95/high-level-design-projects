@@ -4,7 +4,9 @@ BIB = bibtex
 FLAGS = --shell-escape
 
 
-$(PROJECT):
+.PHONY = all okular open clean-all clean skim
+
+$(PROJECT).pdf: $(PROJECT).tex
 		$(TEX) $(FLAGS) $(PROJECT).tex
 
 
