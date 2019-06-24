@@ -19,9 +19,9 @@ SC_MODULE (image_processor)
     /*------------Code Starts Here-------------------------*/
     void convert_to_grayscale () {
         if(enable.read() == 1) {
-            r = (pix_in.read() >> 8) & 0xF;
-            g = (pix_in.read() >> 4) & 0xF;
-            b = pix_in.read() & 0xF;
+            r = pix_in.read().range(11, 8);
+            g = pix_in.read().range(7, 4);
+            b = pix_in.read().range(3, 0);
 
             pix_out = r * 0.3 + g * 0.59 + b * 0.11;
 
