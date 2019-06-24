@@ -173,7 +173,7 @@
 
 
 \author{
-  \IEEEauthorblockN{Luis León\tec, Emmanuel Madrigal\tec, Eliéser\tec }
+  \IEEEauthorblockN{Luis León\tec, Emmanuel Madrigal\tec, Eliécer\tec }
   \vspace{3pt}
   %
   \IEEEauthorblockA{
@@ -266,7 +266,7 @@ El sistema además tendra los siguientes requerimientos:
 
 \begin{itemize}
   \item \textbf{Cuadros procesados por segundo}: $60\ Hz$
-  \item \textbf{Tamaño de imagen}: $640\times480$ (estandar VGA)
+  \item \textbf{Tamaño de imagen}: $640\times480$ (estándar VGA)
   \item \textbf{Transmisión}: Real-time (latencia máxima: $10\ ms$)
   \item \textbf{Presupuesto}: $< \$ 1000$
 \end{itemize}
@@ -286,9 +286,9 @@ presentado en la figura \ref{fig:block_diagram}.
 \end{figure}
 
 Tentativamente, el streaming desde el decodificador digital hasta el 
-procesador de video es realizado a través de un modulo FIFO, eso para acoplar 
+procesador de video es realizado a través de un modulo \emph{FIFO}, eso para acoplar 
 las velocidades de los diversos módulos. Igualmente, esto se ve reflejado 
-para el caso del codificador.%Este "se ve reflejado" no queda claro en ningun lado
+para el caso del codificador, que recibe los datos procedentes del procesador de imagen.
 
 
 \section{Particionamiento de HW/SW}
@@ -298,13 +298,27 @@ El particionamiento será realizado de una manera funcional, es decir se iniciar
 funcionalidades a implementar y luego se tomará se decidirá en según la funcionalidad y los
 requerimientos establecidos para decidir si el módulo será implementado en hardware o en software.
 
-Tanto el módulo de ADC (Convertidor analógico a digital por sus siglas en inglés) como el módulo de DAC
-(Convertidor digital a analógico por sus siglas en inglés son módulosde señal mixta por lo que deberán
+Tanto el módulo de \emph{ADC} (Convertidor analógico a digital por sus siglas en inglés) como el módulo de \emph{DAC}
+(Convertidor digital a analógico por sus siglas en inglés son módulos de señal mixta por lo que deberán
 de ser implementados en hardware.
 
-Los otros tres modulos pueden ser implementados tanto en hardware como en software. Por lo que debe de
+Para el modelado de los otros tres módulos, este se realizará de la siguiente manera:
+
+\begin{itemize}
+    \item \textbf{Decodificador VGA}: Modelado \emph{Loosely Timed} (LT)
+    \item \textbf{Procesador de imagen}: Modelado \emph{Programmer's view} (PV)
+    \item \textbf{Codificador VGA}: Modelado \emph{Approximately Timed} (AT)
+\end{itemize}
+
+Igualmente, los tres modulos anteriores pueden ser implementados tanto en hardware como en software. Por lo que debe de
 tomarse una decisión sobre como serán implementados. %TODO escribir justificación para implementacion en HW o SW
 
+% Insights:
+% - VGA controllers para HW, debido a la precisión requerida en los tiempos (aplicación de tiempo crítico)
+% - Procesador de imagen para HW, debido a que se requiere una aplicación en realtime, donde la comunicación con los controladores
+% puede ser problematica por la transferencia de memoria.
+%
+% Hay apertura para otras sugerencias ...
 
 \section{Conclusiones y Recomendaciones}
 
