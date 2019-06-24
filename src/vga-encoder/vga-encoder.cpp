@@ -16,6 +16,7 @@ SC_MODULE (vga_encoder) {
   //------------Local Variables Here--------------------- 640->cols x 480-> rows
   sc_uint<10>	col; /* 640 cols */
   sc_uint<9>	row; /* 480 rows */
+  sc_uint<12> pixel;
 
   sc_uint<3>  state = 0;
   sc_uint<3>  next_state = 0;
@@ -38,7 +39,7 @@ SC_MODULE (vga_encoder) {
       FSM_output_logic();
     }
   }
-  
+
   void FSM_next_state() {
     switch (state) {
       case FSM_VSYNC:
@@ -99,15 +100,19 @@ SC_MODULE (vga_encoder) {
         break;
       case FSM_H_BACK_PORCH:
         h_sync.write(1);
+        pixel_unqueue.write(0);
         next_state_t.notify(DELAY_H_BACK_PORCH,SC_NS);
         break;
       case FSM_H_FRONT_PORCH:
         h_sync.write(1);
+        pixel_unqueue.write(0);
         row++;
         next_state_t.notify(DELAY_H_FRONT_PORCH,SC_NS);
         break;
       case FSM_SEND_PIXELS:
         h_sync.write(1);
+        pixel_unqueue.write(1);
+        send_pixel();
         col++;
         next_state_t.notify(DELAY_SEND_PIXELS,SC_PS);
         break;
@@ -119,11 +124,13 @@ SC_MODULE (vga_encoder) {
     }
   }
 
-  /* Pixel sender */
+  /* Datapath */
   void send_pixel() {
-    while(true) {
+    pixel = pixel_in.read();
 
-    }
+    red_channel.write(pixel(11,8));
+    green_channel.write(pixel(7,4));
+    blue_channel.write(pixel(3,0));
   }
 
-}; // End of Module counter
+}; 
