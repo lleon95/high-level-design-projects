@@ -66,7 +66,7 @@ SC_MODULE (vga_encoder) {
         }
         break;
       case FSM_H_FRONT_PORCH:
-        if (row == ROWS) {
+        if (row == ROWS - 1) {
           next_state = FSM_V_FRONT_PORCH;
         } else {
           next_state = FSM_H_SYNC;
