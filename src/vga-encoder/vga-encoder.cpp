@@ -6,7 +6,7 @@ SC_MODULE (vga_encoder) {
 
   sc_in<sc_uint<12> > pixel_in;
   sc_out<bool >  pixel_unqueue;
-  sc_out<sc_uint<18> >  pixel_counter;
+  sc_out<sc_uint<19> >  pixel_counter;
 
   sc_out<bool >  h_sync;
   sc_out<bool >  v_sync;
@@ -85,20 +85,25 @@ SC_MODULE (vga_encoder) {
     switch (state) {
       case FSM_VSYNC:
         v_sync.write(0);
+        h_sync.write(1);
+        pixel_unqueue.write(0);
         col = 0;
         row = 0;
         next_state_t.notify(DELAY_VSYNC,SC_NS);
         break;
       case FSM_V_BACK_PORCH:
         v_sync.write(1);
+        pixel_unqueue.write(0);
         next_state_t.notify(DELAY_V_BACK_PORCH,SC_NS);
         break;
       case FSM_V_FRONT_PORCH:
         v_sync.write(1);
+        pixel_unqueue.write(0);
         next_state_t.notify(DELAY_V_FRONT_PORCH,SC_NS);
         break;
       case FSM_H_SYNC:
         h_sync.write(0);
+        pixel_unqueue.write(0);
         col = 0;
         next_state_t.notify(DELAY_H_SYNC,SC_NS);
         break;
@@ -121,6 +126,7 @@ SC_MODULE (vga_encoder) {
         next_state_t.notify(DELAY_SEND_PIXELS,SC_PS);
         break;
       default:
+        pixel_unqueue.write(0);
         h_sync.write(1);
         v_sync.write(1);
         next_state_t.notify(DELAY_DEFAULT,SC_NS);
@@ -143,18 +149,17 @@ SC_MODULE (vga_encoder) {
       wait(wr_t);
       pixel = pixel_in.read();
       send_pixel();
-      pixel_unqueue.write(0);
     }
   }
 
   /* Output port - Status */
   void read(){
-    wr_t.notify(READ_DELAY, SC_NS);
+    rd_t.notify(READ_DELAY, SC_NS);
   }
   void rd(){
     while(true){
       wait(rd_t);
-      pixel_counter.write(col*row);
+      pixel_counter.write(COLS*row + col);
     }
   }
 
