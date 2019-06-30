@@ -5,11 +5,11 @@
 SC_MODULE (vga_encoder) {
 
   sc_in<sc_uint<12> > pixel_in;
-  sc_out<bool>  pixel_unqueue;
+  sc_out<bool >  pixel_unqueue;
   sc_out<sc_uint<18> >  pixel_counter;
 
-  sc_out<bool>  h_sync;
-  sc_out<bool>  v_sync;
+  sc_out<bool >  h_sync;
+  sc_out<bool >  v_sync;
   sc_out<sc_uint<4> > red_channel;
   sc_out<sc_uint<4> > green_channel;
   sc_out<sc_uint<4> > blue_channel;
@@ -38,6 +38,7 @@ SC_MODULE (vga_encoder) {
   void FSM_Emulator() {
     while(true) {
       wait(next_state_t);
+      state = next_state;
       FSM_next_state();
       FSM_output_logic();
     }
@@ -127,7 +128,13 @@ SC_MODULE (vga_encoder) {
     }
   }
 
-  /* Input port */
+  /* Input ports */
+  void reset(){
+    col = 0;
+    row = 0;
+    next_state = FSM_VSYNC;
+    next_state_t.notify(READ_DELAY,SC_NS);
+  }
   void write(){
     wr_t.notify(WRITE_DELAY, SC_NS);
   }
