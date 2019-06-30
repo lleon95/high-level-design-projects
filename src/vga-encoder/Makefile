@@ -10,7 +10,7 @@ SOURCES=$(MODULE).cpp $(MODULE)-tbb.cpp $(MODULE).hpp
 all: $(MODULE)
 
 $(MODULE) : $(SOURCES)
-	$(GCC) $(CXXFLAGS) $(INCLUDES) $(LDFLAGS) -o $@ $^
+	$(GCC) $(CXXFLAGS) $(INCLUDES) $(LDFLAGS) $(shell pkg-config --cflags --libs systemc) -o $@ $^
 
 clean:
 	rm -f $(MODULE)
