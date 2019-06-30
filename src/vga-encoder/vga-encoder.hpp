@@ -27,4 +27,6 @@
   #define DELAY_V_FRONT_PORCH  350000   /* 350us    */
   #define DELAY_DEFAULT 1
 
+  #define WRITE_DELAY 10 /* 10ns */
+  #define READ_DELAY 5 /* 10ns */
 #endif

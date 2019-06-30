@@ -6,6 +6,7 @@ SC_MODULE (vga_encoder) {
 
   sc_in<sc_uint<12> > pixel_in;
   sc_out<bool>  pixel_unqueue;
+  sc_out<sc_uint<18> >  pixel_counter;
 
   sc_out<bool>  h_sync;
   sc_out<bool>  v_sync;
@@ -21,12 +22,14 @@ SC_MODULE (vga_encoder) {
   sc_uint<3>  state = 0;
   sc_uint<3>  next_state = 0;
 
-  sc_event rd_t, next_state_t;
+  sc_event wr_t, rd_t, next_state_t;
 
   SC_HAS_PROCESS(vga_encoder);
     vga_encoder(sc_module_name vga_encoder) {
     SC_THREAD(FSM_Emulator);
-         
+    /* Ports */
+    SC_THREAD(wr);
+    SC_THREAD(rd);
   }
 
   //------------Code Starts Here-------------------------
@@ -112,7 +115,7 @@ SC_MODULE (vga_encoder) {
       case FSM_SEND_PIXELS:
         h_sync.write(1);
         pixel_unqueue.write(1);
-        send_pixel();
+        //send_pixel();
         col++;
         next_state_t.notify(DELAY_SEND_PIXELS,SC_PS);
         break;
@@ -124,10 +127,32 @@ SC_MODULE (vga_encoder) {
     }
   }
 
+  /* Input port */
+  void write(){
+    wr_t.notify(WRITE_DELAY, SC_NS);
+  }
+  void wr(){
+    while(true){
+      wait(wr_t);
+      pixel = pixel_in.read();
+      send_pixel();
+      pixel_unqueue.write(0);
+    }
+  }
+
+  /* Output port - Status */
+  void read(){
+    wr_t.notify(READ_DELAY, SC_NS);
+  }
+  void rd(){
+    while(true){
+      wait(rd_t);
+      pixel_counter.write(col*row);
+    }
+  }
+
   /* Datapath */
   void send_pixel() {
-    pixel = pixel_in.read();
-
     red_channel.write(pixel(11,8));
     green_channel.write(pixel(7,4));
     blue_channel.write(pixel(3,0));
