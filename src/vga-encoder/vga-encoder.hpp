@@ -25,8 +25,8 @@
   #define DELAY_SEND_PIXELS  39328      /* 39.328ns - Note this is in ps*/
   #define DELAY_H_FRONT_PORCH  940      /* 940ns    */
   #define DELAY_V_FRONT_PORCH  350000   /* 350us    */
-  #define DELAY_DEFAULT 1
+  #define DELAY_DEFAULT 10
 
-  #define WRITE_DELAY 10 /* 10ns */
-  #define READ_DELAY 5 /* 10ns */
+  #define WRITE_DELAY 20 /* 10ns */
+  #define READ_DELAY 10 /* 10ns */
 #endif
