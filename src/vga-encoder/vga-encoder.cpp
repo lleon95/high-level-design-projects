@@ -14,7 +14,6 @@ SC_MODULE (vga_encoder) {
   sc_out<sc_uint<4> > green_channel;
   sc_out<sc_uint<4> > blue_channel;
 
-  //------------Local Variables Here--------------------- 640->cols x 480-> rows
   sc_uint<10>	col; /* 640 cols */
   sc_uint<9>	row; /* 480 rows */
   sc_uint<12> pixel;
@@ -31,8 +30,6 @@ SC_MODULE (vga_encoder) {
     SC_THREAD(wr);
     SC_THREAD(rd);
   }
-
-  //------------Code Starts Here-------------------------
 
   /* Control stage */
   void FSM_Emulator() {

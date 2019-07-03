@@ -63,10 +63,8 @@ int sc_main (int argc, char* argv[]) {
     /* Logic */
     if(pixel_unqueue.read()){
       jump_time = DELAY_SEND_PIXELS;
-      cout << "@" << sc_time_stamp() <<" New pixel request... " << endl;
       pixel_in.write(pixel_compute ());
       video_out.write();
-      cout << "@" << sc_time_stamp() <<" Pixel written... " << endl;
       video_out.read();    
       cout << "@" << sc_time_stamp() <<" Current pixel position: " 
           << pixel_counter.read() << endl;
