@@ -55,7 +55,7 @@ int sc_main (int argc, char* argv[]) {
   cout << "@" << sc_time_stamp() <<" Starting simulation\n"<< endl;
 
   /* Print signals */
-  int runtime = 0; 
+  uint64_t runtime = 0; 
   int jump_time = RUNTIME_STEP;
   for (runtime = 0; runtime < RUNTIME; runtime += jump_time){
     /* Simulation step */
@@ -67,7 +67,7 @@ int sc_main (int argc, char* argv[]) {
       video_out.write();
       video_out.read();    
       cout << "@" << sc_time_stamp() <<" Current pixel position: " 
-          << pixel_counter.read() << endl;
+          << pixel_counter.read() + 1 << endl;
     }
     else {
       jump_time = RUNTIME_STEP;

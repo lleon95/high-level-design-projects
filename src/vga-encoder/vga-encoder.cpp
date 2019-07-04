@@ -56,7 +56,7 @@ SC_MODULE (vga_encoder) {
         next_state = FSM_SEND_PIXELS;
         break;
       case FSM_SEND_PIXELS:
-        if (col == COLS) {
+        if (col == COLS - 2) {
           next_state = FSM_H_FRONT_PORCH;
         } else {
           next_state = FSM_SEND_PIXELS;
