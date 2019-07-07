@@ -4,7 +4,7 @@ LDFLAGS= -lsystemc
 CXXFLAGS=-Wall -Wextra
 
 MODULE=vga-encoder
-SOURCES=$(MODULE).cpp $(MODULE)-tbb.cpp $(MODULE).hpp
+SOURCES=$(MODULE).cpp $(MODULE)-tbb.cpp
 
 
 all: $(MODULE)
