@@ -1,6 +1,5 @@
 #include "systemc.h"
 
-#include "vga-encoder.hpp"
 #include "vga-encoder.cpp"
 
 #define RUNTIME 17000000000 /* 17ms */
