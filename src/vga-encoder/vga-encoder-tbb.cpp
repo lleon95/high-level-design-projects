@@ -81,6 +81,9 @@ sc_main (int argc, char* argv[])
     return 0;
 }
 
+/*
+ * This function computes a new pixel, emulating the image-processor module
+ */
 sc_uint<12>
 pixel_compute ()
 {
