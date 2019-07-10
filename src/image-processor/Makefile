@@ -4,13 +4,13 @@ LDFLAGS= -lsystemc
 CXXFLAGS=-Wall -Wextra
 
 MODULE=image-processor
-SOURCES=$(MODULE).cpp $(MODULE)-tbb.cpp $(MODULE).hpp
+SOURCES=$(MODULE).cpp $(MODULE)-tbb.cpp
 
 
 all: $(MODULE)
 
 $(MODULE) : $(SOURCES)
-		$(GCC) $(CXXFLAGS) $(INCLUDES) $(LDFLAGS) -o $@ $^
+	$(GCC) $(CXXFLAGS) $(INCLUDES) $(LDFLAGS) -o $@ $^
 
 clean:
-		rm -f $(MODULE)
+	rm -f $(MODULE)

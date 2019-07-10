@@ -1,11 +1,15 @@
 
+#include <math.h>
 #include <stdlib.h>
 #include <systemc.h>
 #include <time.h>
 
 #include "image-processor.cpp"
 
-float
+#define TEST_ITERATIONS 20
+
+/* Get the exact expected value */
+double
 rgb12_to_gray(int pixel)
 {
     int r = (pixel >> 8) & 0xF;
@@ -26,6 +30,7 @@ sc_main (int argc, char* argv[])
     sc_signal<sc_uint<PIXEL_OUT_WIDTH>> pix_out;
 
     int i = 0;
+    double total_error = 0;
     /* Connect the DUT */
     image_processor processor("GRAYSCALER");
     processor.enable(enable);
@@ -45,14 +50,18 @@ sc_main (int argc, char* argv[])
     /* Initialize all variables */
     cout << "@" << sc_time_stamp() <<" Asserting Enable\n" << endl;
     enable = 1;  /* Assert enable */
-    for (i=0; i<20; i++) {
+    for (i=0; i<TEST_ITERATIONS; i++) {
         /* Generate random number */
         random_pixel = rand() % ( 1 << PIXEL_IN_WIDTH );
         pix_in.write(random_pixel);
         sc_start(1,SC_NS);
+        total_error += abs(pix_out.read() - rgb12_to_gray(random_pixel));
         cout << "input pixel: " << random_pixel << "\tsystemC output = " <<
              pix_out.read() << "\texpected output = " << rgb12_to_gray(random_pixel) << endl;
     }
+
+    cout << "Average Error: " << total_error / TEST_ITERATIONS << endl;
+
 
     cout << "@" << sc_time_stamp() <<" De-Asserting Enable\n" << endl;
     enable = 0; /* De-assert enable */
