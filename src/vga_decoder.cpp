@@ -25,9 +25,8 @@ SC_MODULE (vga_decoder) {
   sc_event update_output_event;
   
   SC_HAS_PROCESS(vga_decoder);
-  // Constructor
 
-  SC_CTOR(vga_decoder){
+  vga_decoder(sc_module_name vga_decoder){
   
     h_count = -1;
     v_count = -1;
@@ -45,7 +44,7 @@ SC_MODULE (vga_decoder) {
     SC_THREAD(column_count);
     SC_THREAD(row_count);
     SC_THREAD(update_output);
-  } // End of Constructor
+  }
 
   //------------Code Starts Here-------------------------
 
@@ -64,6 +63,7 @@ SC_MODULE (vga_decoder) {
         ((v_count >= 35) && (v_count < 515))){
       pixel = pixel_in.read();
       update_output_event.notify(UPDATE_OUTPUT_DELAY, SC_NS);
+    }
   }
   
   void column_count() {
