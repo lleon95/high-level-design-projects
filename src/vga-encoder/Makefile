@@ -6,7 +6,6 @@ CXXFLAGS=-Wall -Wextra
 MODULE=vga-encoder
 SOURCES=$(MODULE).cpp $(MODULE)-tbb.cpp
 
-
 all: $(MODULE)
 
 $(MODULE) : $(SOURCES)
@@ -14,3 +13,4 @@ $(MODULE) : $(SOURCES)
 
 clean:
 	rm -f $(MODULE)
+
