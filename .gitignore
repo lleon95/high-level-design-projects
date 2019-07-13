@@ -89,8 +89,11 @@ flycheck_*.el
 #VCD trace files
 *.vcd
 
+#Meld files
+*.orig
+
 #Binary files
-image-processor
+grayscaler
 
 
 # End of https://www.gitignore.io/api/c++,emacs
