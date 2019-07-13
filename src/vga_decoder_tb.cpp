@@ -47,8 +47,8 @@ int sc_main (int argc, char* argv[]) {
 
   // Reset the inputs
   pixel_in = 0;
-  hsync = 1;
-  vsync = 1;
+  hsync = 0;
+  vsync = 0;
   sc_start(10,SC_NS);
 
   for (double simulated_time = 0; simulated_time < SIMULATION_TIME;
