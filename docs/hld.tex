@@ -229,18 +229,18 @@ DSP
 
 \subsection{Requerimientos}
 
-En este proyecto se implementar\'a un sistema de procesamiento de video descrito a
-continuacion.
-El procesador de video debe recibir la imagen de una fuente de video en VGA y 
-entregarla tambi\'en en dicho formato. El procesamiento de la imagen debe 
-ser en tiempo real, lo que implica que el procesamiento al que se someta la 
-imagen debe aportar un retraso en la imagen de salida que sea casi 
-imperceptible ante el ojo humano.
+En este proyecto se implementar\'a un sistema de procesamiento de
+video descrito a continuacion.  El procesador de video debe recibir la
+imagen de una fuente de video en VGA y entregarla tambi\'en en dicho
+formato. El procesamiento de la imagen debe ser en tiempo real, lo que
+implica que el procesamiento al que se someta la imagen debe aportar
+un retraso en la imagen de salida que sea casi imperceptible ante el
+ojo humano.
 
-El procesamiento de video llevar\'a a cabo una conversion a escala de grises y, 
-tentativamente, un resaltamiento de bordes usando un filtro \emph{Sobel}. 
-Un ejemplo de entrada y salida del procesador de video es como se presenta 
-en la figura \ref{fig:processing_unit_example}.
+El procesamiento de video llevar\'a a cabo una conversion a escala de
+grises y, tentativamente, un resaltamiento de bordes usando un filtro
+\emph{Sobel}.  Un ejemplo de entrada y salida del procesador de video
+es como se presenta en la figura \ref{fig:processing_unit_example}.
 
 \begin{figure}[!h]
   \centering
@@ -275,8 +275,9 @@ El sistema adem\'as tendra los siguientes requerimientos:
 \section{Diseño}
 \label{sec:design}
 
-Basado en los requerimientos de la secci\'on \ref{sec:req} se deriva el diseño tentativo para la aplicaci\'on 
-presentado en la figura \ref{fig:block_diagram}.
+Basado en los requerimientos de la secci\'on \ref{sec:req} se deriva
+el diseño tentativo para la aplicaci\'on presentado en la figura
+\ref{fig:block_diagram}.
 
 \begin{figure}
   \centering
@@ -285,22 +286,27 @@ presentado en la figura \ref{fig:block_diagram}.
   \label{fig:block_diagram}
 \end{figure}
 
-Tentativamente, el streaming desde el decodificador digital hasta el 
-procesador de video es realizado a trav\'es de un modulo \emph{FIFO}, eso para acoplar 
-las velocidades de los diversos m\'odulos. Igualmente, esto se ve reflejado 
-para el caso del codificador, que recibe los datos procedentes del procesador de imagen.
+Tentativamente, el streaming desde el decodificador digital hasta el
+procesador de video es realizado a trav\'es de un modulo \emph{FIFO},
+eso para acoplar las velocidades de los diversos
+m\'odulos. Igualmente, esto se ve reflejado para el caso del
+codificador, que recibe los datos procedentes del procesador de
+imagen.
 
 
 \section{Particionamiento de HW/SW}
 \label{sec:partitioning}
 
-El particionamiento ser\'a realizado de una manera funcional, es decir se iniciara con las distintas
-funcionalidades a implementar y luego se tomar\'a se decidir\'a en seg\'un la funcionalidad y los
-requerimientos establecidos para decidir si el m\'odulo ser\'a implementado en hardware o en software.
+El particionamiento ser\'a realizado de una manera funcional, es decir
+se iniciara con las distintas funcionalidades a implementar y luego se
+tomar\'a se decidir\'a en seg\'un la funcionalidad y los
+requerimientos establecidos para decidir si el m\'odulo ser\'a
+implementado en hardware o en software.
 
-Tanto el m\'odulo de \emph{ADC} (Convertidor anal\'ogico a digital por sus siglas en ingl\'es) como el m\'odulo de \emph{DAC}
-(Convertidor digital a anal\'ogico por sus siglas en ingl\'es son m\'odulos de señal mixta por lo que deber\'an
-de ser implementados en hardware.
+Tanto el m\'odulo de \emph{ADC} (Convertidor anal\'ogico a digital por
+sus siglas en ingl\'es) como el m\'odulo de \emph{DAC} (Convertidor
+digital a anal\'ogico por sus siglas en ingl\'es son m\'odulos de
+señal mixta por lo que deber\'an de ser implementados en hardware.
 
 Para el modelado de los otros tres m\'odulos, este se realizar\'a de la siguiente manera:
 
@@ -310,8 +316,9 @@ Para el modelado de los otros tres m\'odulos, este se realizar\'a de la siguient
     \item \textbf{Codificador VGA}: Modelado \emph{Approximately Timed} (AT)
 \end{itemize}
 
-Igualmente, los tres modulos anteriores pueden ser implementados tanto en hardware como en software. Por lo que debe de
-tomarse una decisi\'on sobre como ser\'an implementados. %TODO escribir justificaci\'on para implementacion en HW o SW
+Igualmente, los tres modulos anteriores pueden ser implementados tanto
+en hardware como en software. Por lo que debe de tomarse una
+decisi\'on sobre como ser\'an implementados. %TODO escribir justificaci\'on para implementacion en HW o SW
 
 % Insights:
 % - VGA controllers para HW, debido a la precisi\'on requerida en los tiempos (aplicaci\'on de tiempo criitico)
