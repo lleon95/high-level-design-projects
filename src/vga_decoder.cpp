@@ -3,8 +3,10 @@
 
 #define PIXEL_SIZE 12
 #define PIXEL_DELAY  39.722  //This is in nano secs
-#define ROW_DELAY PIXEL_DELAY * 800 // This is in nano secs
-#define UPDATE_OUTPUT_DELAY 1
+#define PIXELS_IN_ROW 800
+#define ROWS_IN_FRAME 525
+#define ROW_DELAY PIXEL_DELAY * PIXELS_IN_ROW // This is in nano secs
+#define UPDATE_OUTPUT_DELAY 10
 
 SC_MODULE (vga_decoder) {
  
@@ -28,9 +30,9 @@ SC_MODULE (vga_decoder) {
 
   vga_decoder(sc_module_name vga_decoder){
   
-    h_count = -1;
-    v_count = -1;
-    pixel   =  0;
+    h_count = 0;
+    v_count = 0;
+    pixel   = 0;
   
     SC_METHOD (decode_pixel);
     sensitive << pixel_in;
@@ -49,18 +51,18 @@ SC_MODULE (vga_decoder) {
   //------------Code Starts Here-------------------------
 
   void start_column_count(){
-    h_count = -1;
+    h_count = 0;
     count_column_event.notify();
   }
 
   void start_row_count(){
-    v_count = -1;
+    v_count = 0;
     count_row_event.notify();
   }
   
   void decode_pixel() {
-    if (((h_count >= 144) && (h_count < 784)) &&  //In the visible section
-        ((v_count >= 35) && (v_count < 515))){
+    if (((h_count >= 145) && (h_count < 785)) &&  //In the visible section
+        ((v_count >= 36) && (v_count < 516))){
       pixel = pixel_in.read();
       update_output_event.notify(UPDATE_OUTPUT_DELAY, SC_NS);
     }
@@ -69,9 +71,9 @@ SC_MODULE (vga_decoder) {
   void column_count() {
     while(true) {
       wait(count_column_event);
-      if (h_count < 799){
+      if (h_count < PIXELS_IN_ROW){
         h_count += 1;
-        cout<<"@" << sc_time_stamp() <<" :: Column " << h_count <<endl;
+        //cout<<"@" << sc_time_stamp() <<" :: Column " << h_count <<endl;
         count_column_event.notify(PIXEL_DELAY, SC_NS);
       }
     }
@@ -80,9 +82,9 @@ SC_MODULE (vga_decoder) {
   void row_count() {
     while(true) {
       wait(count_row_event);
-      if (v_count < 524){
+      if (v_count < ROWS_IN_FRAME){
         v_count += 1;
-        cout<<"@" << sc_time_stamp() <<" :: Row " << v_count <<endl;
+        //cout<<"@" << sc_time_stamp() <<" :: Row " << v_count <<endl;
         count_row_event.notify(ROW_DELAY, SC_NS);
       }
     }
