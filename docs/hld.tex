@@ -286,35 +286,38 @@ el diseño tentativo para la aplicaci\'on presentado en la figura
 
 \begin{figure}
   \centering
-  \begin{tikzpicture}[
-      roundnode/.style={circle, draw=black!60, very thick, minimum size=7mm},
-      squarednode/.style={rectangle, draw=black!60, very thick, minimum size=5mm},
-    ]
-    % Nodes
 
+ \resizebox{\columnwidth}{!}{% 
+  
+    \begin{tikzpicture}[       ,
+        roundnode/.style={circle, draw=black!60, very thick, minimum size=7mm},
+        squarednode/.style={rectangle, draw=black!60, very thick, minimum size=5mm},
+      ]
+      % Nodes
     
-    \node[squarednode] (bus) {Shared communication bus};
-    
-    \node[squarednode] (adc) [below left=of bus] {ADC};
-    \node[squarednode] (vga_decoder) [below right=of bus] {VGA Decoder};
-    \node[squarednode] (video_processor) [above=of bus] {Video Processor};
-    \node[squarednode] (vga_encoder) [above left=of bus] {VGA Encoder};
-    \node[squarednode] (dac) [above right=of bus] {DAC};
+      \node[squarednode] (bus) {Shared communication bus};
+      
+      \node[squarednode] (adc) [below left=of bus] {ADC};
+      \node[squarednode] (vga_decoder) [below right=of bus] {VGA Decoder};
+      \node[squarednode] (video_processor) [above=of bus] {Video Processor};
+      \node[squarednode] (vga_encoder) [above left=of bus] {VGA Encoder};
+      \node[squarednode] (dac) [above right=of bus] {DAC};
+      
+      \node[roundnode] (vga_input) [below=of adc] {VGA Input};
+      \node[roundnode] (vga_output) [above=of dac] {VGA Output};    
 
-    
-    \node[roundnode] (vga_input) [below=of adc] {VGA Input};
-    \node[roundnode] (vga_output) [above=of dac] {VGA Output};
-    
+      % Lines
+      \draw[->] (vga_input) -- (adc);
+      \draw[->] (adc) -- (bus);
+      \draw[<->] (vga_encoder) -- (bus);
+      \draw[<->] (video_processor) -- (bus);
+      \draw[<-] (dac) -- (bus);
+      \draw[<->] (vga_decoder) -- (bus);
+      \draw[->] (dac) -- (vga_output);
+    \end{tikzpicture}
 
-    % Lines
-    \draw[->] (vga_input) -- (adc);
-    \draw[->] (adc) -- (bus);
-    \draw[<->] (vga_encoder) -- (bus);
-    \draw[<->] (video_processor) -- (bus);
-    \draw[<-] (dac) -- (bus);
-    \draw[<->] (vga_decoder) -- (bus);
-    \draw[->] (dac) -- (vga_output);
-  \end{tikzpicture}
+}
+    
   \caption{Diagrama de bloques de la soluci\'on}
   \label{fig:block_diagram}
 \end{figure}
@@ -324,7 +327,7 @@ el diseño tentativo para la aplicaci\'on presentado en la figura
 
 El particionamiento ser\'a realizado de una manera funcional, es decir
 se iniciara con las distintas funcionalidades a implementar y luego se
-tomar\'a se decidir\'a en seg\'un la funcionalidad y los
+tomar\'a se 1decidir\'a en seg\'un la funcionalidad y los
 requerimientos establecidos para decidir si el m\'odulo ser\'a
 implementado en hardware o en software.
 
@@ -333,7 +336,8 @@ sus siglas en ingl\'es) como el m\'odulo de \emph{DAC} (Convertidor
 digital a anal\'ogico por sus siglas en ingl\'es son m\'odulos de
 señal mixta por lo que deber\'an de ser implementados en hardware.
 
-Para el modelado de los otros tres m\'odulos, este se realizar\'a de la siguiente manera:
+Para el modelado de los otros tres m\'odulos, este se realizar\'a de
+la siguiente manera:
 
 \begin{itemize}
     \item \textbf{Decodificador VGA}: Modelado \emph{Loosely Timed} (LT)
@@ -341,16 +345,20 @@ Para el modelado de los otros tres m\'odulos, este se realizar\'a de la siguient
     \item \textbf{Codificador VGA}: Modelado \emph{Approximately Timed} (AT)
 \end{itemize}
 
-Igualmente, los tres modulos anteriores pueden ser implementados tanto
-en hardware como en software. Por lo que debe de tomarse una
-decisi\'on sobre como ser\'an implementados. %TODO escribir justificaci\'on para implementacion en HW o SW
+Ambos m\'odulos de decodificaci\'on son altamente dependientes en su
+temporizaci\'on para poder codificar y decodificar los datos
+provenientes del VGA y devolverlos hacia otro m\'odulo de VGA con la
+temporizaci\'on correcta. Es por esto que estos m\'odulos seran
+implementados en HW.
 
-% Insights:
-% - VGA controllers para HW, debido a la precisi\'on requerida en los tiempos (aplicaci\'on de tiempo criitico)
-% - Procesador de imagen para HW, debido a que se requiere una aplicaci\'on en realtime, donde la comunicaci\'on con los controladores
-% puede ser problematica por la transferencia de memoria.
-%
-% Hay apertura para otras sugerencias ...
+Por el otro lado el procesador de imag\'en sera implementado en SW
+debido a que este es m\'as apto para poder representar algoritmos
+complejos con una alta precisi\'on, adem\'as estos son capaces de ser
+modificados con una alta facilidad para extender sus capacidades.
+
+Debido a que el procesamiento de video ser\'a realizado mediante SW
+esto requerir\'a de un m\'odulo de memoria para poder funcionar un
+buffer para los datos de la memoria.
 
 \section{Conclusiones y Recomendaciones}
 
