@@ -6,7 +6,7 @@ FLAGS = --shell-escape
 
 .PHONY = all okular open clean-all clean skim
 
-$(PROJECT).pdf: $(PROJECT).tex
+$(PROJECT).pdf: $(PROJECT).tex macros.tex
 		$(TEX) $(FLAGS) $(PROJECT).tex
 
 
