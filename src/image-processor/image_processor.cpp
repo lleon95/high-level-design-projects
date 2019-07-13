@@ -11,7 +11,7 @@
 
 #define INTERRUPT_DELAY 0
 
-SC_MODULE (grayscaler)
+SC_MODULE (image_processor)
 {
     sc_in<bool> enable;
     sc_inout<sc_uint<PIXEL_WIDTH> > pix_data;
@@ -21,9 +21,9 @@ SC_MODULE (grayscaler)
 
     /* Local Variables */
     sc_uint<PIXEL_WIDTH> current_pixel;
-    sc_uint<2*CHANNEL_WIDTH> r;
-    sc_uint<2*CHANNEL_WIDTH> g;
-    sc_uint<2*CHANNEL_WIDTH> b;
+    sc_uint<CHANNEL_WIDTH> r;
+    sc_uint<CHANNEL_WIDTH> g;
+    sc_uint<CHANNEL_WIDTH> b;
     sc_uint<CHANNEL_WIDTH> gray;
 
     /* Interrupt Handler */
@@ -71,7 +71,7 @@ SC_MODULE (grayscaler)
         }
     }
 
-    SC_CTOR(grayscaler) {
+    SC_CTOR(image_processor) {
         cout<<"Executing new"<<endl;
         SC_THREAD(convert_to_grayscale);
 

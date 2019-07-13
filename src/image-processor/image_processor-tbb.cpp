@@ -4,7 +4,7 @@
 #include <systemc.h>
 #include <time.h>
 
-#include "grayscaler.cpp"
+#include "image_processor.cpp"
 
 #define TEST_ITERATIONS 20
 
@@ -35,7 +35,7 @@ sc_main (int argc, char* argv[])
     double total_error = 0;
 
     /* Connect the DUT */
-    grayscaler processor("GRAYSCALER");
+    image_processor processor("GRAYSCALER");
     processor.enable(enable);
     processor.pix_data(pix_data);
     processor.pix_address(pix_address);
@@ -43,7 +43,7 @@ sc_main (int argc, char* argv[])
     sc_start(1,SC_NS);
 
     /* Open VCD file */
-    sc_trace_file *wf = sc_create_vcd_trace_file("grayscaler");
+    sc_trace_file *wf = sc_create_vcd_trace_file("image_processor");
 
     /* Dump the desired signals */
     sc_trace(wf, enable, "enable");

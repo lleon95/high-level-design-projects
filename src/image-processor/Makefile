@@ -3,7 +3,7 @@ GCC=g++
 LDFLAGS= -lsystemc
 CXXFLAGS=-Wall -Wextra
 
-MODULE=grayscaler
+MODULE=image_processor
 SOURCES=$(MODULE).cpp $(MODULE)-tbb.cpp
 
 

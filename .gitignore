@@ -93,7 +93,7 @@ flycheck_*.el
 *.orig
 
 #Binary files
-grayscaler
+image_processor
 
 
 # End of https://www.gitignore.io/api/c++,emacs
