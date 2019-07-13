@@ -12,5 +12,8 @@ all: $(MODULE)
 $(MODULE) : $(SOURCES)
 	$(GCC) $(CXXFLAGS) $(INCLUDES) $(LDFLAGS) -o $@ $^
 
+test:
+	./$(MODULE)
+
 clean:
 	rm -f $(MODULE)
