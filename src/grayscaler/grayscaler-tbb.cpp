@@ -4,7 +4,7 @@
 #include <systemc.h>
 #include <time.h>
 
-#include "image-processor.cpp"
+#include "grayscaler.cpp"
 
 #define TEST_ITERATIONS 20
 
@@ -32,7 +32,7 @@ sc_main (int argc, char* argv[])
     int i = 0;
     double total_error = 0;
     /* Connect the DUT */
-    image_processor processor("GRAYSCALER");
+    grayscaler processor("GRAYSCALER");
     processor.enable(enable);
     processor.pix_out(pix_out);
     processor.pix_in(pix_in);

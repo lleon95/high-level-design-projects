@@ -6,7 +6,7 @@
 #define PIXEL_OUT_WIDTH 8
 #define CHANNEL_WIDTH 4
 
-SC_MODULE (image_processor)
+SC_MODULE (grayscaler)
 {
     sc_in<bool> enable;
     sc_in<sc_uint<PIXEL_IN_WIDTH> > pix_in;
@@ -31,7 +31,7 @@ SC_MODULE (image_processor)
         }
     }
 
-    SC_CTOR(image_processor) {
+    SC_CTOR(grayscaler) {
         cout<<"Executing new"<<endl;
         SC_METHOD(convert_to_grayscale);
         sensitive << pix_in;
