@@ -6,7 +6,7 @@
 
 #include "image_processor.cpp"
 
-#define TEST_ITERATIONS 20
+#define TEST_ITERATIONS 50
 
 /* Get the exact expected value */
 int
