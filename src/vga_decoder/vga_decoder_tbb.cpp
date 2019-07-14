@@ -19,6 +19,7 @@ sc_main (int argc, char* argv[])
 
     //Outputs
     sc_signal<sc_uint<PIXEL_SIZE> > pixel_out;
+    sc_signal<bool> frame_start;
 
     // Instantiate the DUT
     vga_decoder decoder("Decoder");
@@ -28,6 +29,7 @@ sc_main (int argc, char* argv[])
     decoder.hsync(hsync);
     decoder.vsync(vsync);
     decoder.pixel_out(pixel_out);
+    decoder.frame_start(frame_start);
 
     // Open VCD file
     sc_trace_file *wf = sc_create_vcd_trace_file("vga_decoder");
@@ -38,6 +40,7 @@ sc_main (int argc, char* argv[])
     sc_trace(wf, hsync, "h_sync");
     sc_trace(wf, vsync, "v_sync");
     sc_trace(wf, pixel_out, "pixel_out");
+    sc_trace(wf, frame_start, "frame_start");
 
     // Simulation-control variables
     int column = 1;
@@ -49,21 +52,21 @@ sc_main (int argc, char* argv[])
 
     // Reset the inputs
     pixel_in = 0;
-    hsync = 0;
-    vsync = 0;
-    sc_start(10,SC_NS);
+    hsync = 1;
+    vsync = 1;
+    sc_start(1,SC_NS);
 
     for (double simulated_time = 0; simulated_time < SIMULATION_TIME;
             simulated_time += PIXEL_DELAY) {
         if (column <= 96) { //hsync should be set.
-            hsync = 1;
-        } else {
             hsync = 0;
+        } else {
+            hsync = 1;
         }
         if (row <= 2) { //vsync should be set.
-            vsync = 1;
-        } else {
             vsync = 0;
+        } else {
+            vsync = 1;
         }
         column++;
         if (column == PIXELS_IN_ROW + 1) { //It's a new row
