@@ -1,9 +1,18 @@
-TOPTARGETS := all clean test
+SYSTEMC_HOME=/opt/systemc
+GCC=g++
+LDFLAGS= -lsystemc
+CXXFLAGS=-Wall -Wextra
 
-SUBDIRS := $(wildcard */.)
+MODULE=vga_decoder
+SOURCES=$(MODULE).cpp $(MODULE)_tbb.cpp
 
-$(TOPTARGETS): $(SUBDIRS)
-$(SUBDIRS):
-	$(MAKE) -C $@ $(MAKECMDGOALS)
+all: $(MODULE)
 
-.PHONY: $(TOPTARGETS) $(SUBDIRS)
+$(MODULE) : $(SOURCES)
+	$(GCC) $(CXXFLAGS) $(INCLUDES) $(LDFLAGS) $(shell pkg-config --cflags --libs systemc) -o $@ $^
+
+test:
+	./$(MODULE)
+
+clean:
+	rm -f $(MODULE)
