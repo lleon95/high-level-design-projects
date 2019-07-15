@@ -3,7 +3,7 @@ GCC=g++
 LDFLAGS= -lsystemc
 CXXFLAGS=-Wall -Wextra
 
-MODULE=image-processor
+MODULE=image_processor
 SOURCES=$(MODULE).cpp $(MODULE)-tbb.cpp
 
 
