@@ -4,13 +4,12 @@
 #define ROWS_IN_SCREEN 525   // Rows in a screen, not the visible ones
 #define FRAMES 3             // Frames to simulate
 #define SIMULATION_TIME ROW_DELAY * ROWS_IN_SCREEN * FRAMES // In nano seconds
+#define H_SYNC_SYNCH_PULSE_LENGHT 96 //In pixels
+#define V_SYNC_SYNCH_PULSE_LENGHT 2  //In rows
 
 int
 sc_main (int argc, char* argv[])
 {
-
-    //We use srand to create a random input to be used as a pixel input.
-    //Use the time stamp as the root for srand
     srand (time(NULL));
     // Inputs
     sc_signal<sc_uint<PIXEL_SIZE> > pixel_in;
@@ -58,12 +57,12 @@ sc_main (int argc, char* argv[])
 
     for (double simulated_time = 0; simulated_time < SIMULATION_TIME;
             simulated_time += PIXEL_DELAY) {
-        if (column <= 96) { //hsync should be set.
+        if (column <= H_SYNC_SYNCH_PULSE_LENGHT) { //hsync should be cleared.
             hsync = 0;
         } else {
             hsync = 1;
         }
-        if (row <= 2) { //vsync should be set.
+        if (row <= V_SYNC_SYNCH_PULSE_LENGHT) { //vsync should be cleared.
             vsync = 0;
         } else {
             vsync = 1;
