@@ -54,7 +54,7 @@ convert_to_grayscale (sc_uint<PIXEL_WIDTH> pixel)
     sc_uint<CHANNEL_WIDTH> r;
     sc_uint<CHANNEL_WIDTH> g;
     sc_uint<CHANNEL_WIDTH> b;
-    
+
     /* Get component values from memory */
     r = pixel.range(3*CHANNEL_WIDTH - 1,
                     2*CHANNEL_WIDTH) * 0.3;

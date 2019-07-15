@@ -54,7 +54,8 @@ rgb12_to_sobel(int pixels[9])
     result = result  % ( 1 << CHANNEL_WIDTH );
 
 
-    return (result << (CHANNEL_WIDTH * 2)) + (result << (CHANNEL_WIDTH * 1)) + result;
+    return (result << (CHANNEL_WIDTH * 2)) + (result << (CHANNEL_WIDTH * 1)) +
+           result;
 }
 
 
@@ -107,7 +108,7 @@ sc_main (int argc, char* argv[])
         /* Generate random number */
         for (int i = 0; i < 9; i++) {
             random_pixel = rand() % ( 1 << PIXEL_WIDTH );
-	    test_pixels[i] = random_pixel;
+            test_pixels[i] = random_pixel;
             pixels[i].write(random_pixel);
         }
 

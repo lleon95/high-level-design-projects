@@ -36,21 +36,21 @@ sc_main (int argc, char* argv[])
 
     /* Write all values */
     for(int i = 0; i<5; i++) {
-      data = values[i];
-      address = ADDRESS_START + i;
-      ram.write(address, data);
-      printf("WR: addr = %x, data = %x\n", (int)address, values[i]);
-      sc_start(DELAY,SC_NS);
+        data = values[i];
+        address = ADDRESS_START + i;
+        ram.write(address, data);
+        printf("WR: addr = %x, data = %x\n", (int)address, values[i]);
+        sc_start(DELAY,SC_NS);
     }
     sc_start(DELAY,SC_NS);
 
     printf("\n");
 
     for(int i = 0; i < 5; i++) {
-      address = ADDRESS_START + i;
-      data = ram.read(address);
-      sc_start(DELAY,SC_NS);
-      printf("Rd: addr = %x, data = %x\n", (int)address, (int) data);
+        address = ADDRESS_START + i;
+        data = ram.read(address);
+        sc_start(DELAY,SC_NS);
+        printf("Rd: addr = %x, data = %x\n", (int)address, (int) data);
     }
 
     cout << "@" << sc_time_stamp() <<" Terminating simulation\n" << endl;
