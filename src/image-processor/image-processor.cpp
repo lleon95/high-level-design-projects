@@ -14,14 +14,14 @@
 #define INTERRUPT_DELAY 0
 
 /* Definition of Sobel filter in horizontal direction */
-const int h_weight[3][3] = {
+const sc_uint<CHANNEL_WIDTH> h_weight[3][3] = {
     { -1,  0,  1 },
     { -2,  0,  2 },
     { -1,  0,  1 }
 };
 
 /* Definition of Sobel filter in vertical direction */
-const int v_weight[3][3] = {
+const sc_uint<CHANNEL_WIDTH> v_weight[3][3] = {
     { -1,  -2, -1 },
     { 0,  0,  0 },
     { 1,  2,  1 }
@@ -57,16 +57,16 @@ SC_MODULE (image_processor)
         int single_component = pixel.range(CHANNEL_WIDTH, 0);
 
         /* Get horizontal values */
-        for (int k = 0; k < 3; k++) {
-            for( int l = 0; l < 3; l++) {
-                h_value = h_weights[k][l] * pixels[k][l];
+        for (int i = 0; i < 3; i++) {
+            for( int j = 0; i < 3; i++) {
+                h_value = h_weights[i][j] * pixels[i][j];
             }
         }
 
         /* Get vertical values */
-        for (int k = 0; k < 3; k++) {
-            for( int l = 0; l < 3; l++) {
-                v_value = v_weights[k][l] * pixels[k][l];
+        for (int i = 0; i < 3; i++) {
+            for( int j = 0; j < 3; j++) {
+                v_value = v_weights[i][j] * pixels[i][j];
             }
         }
 
@@ -93,6 +93,8 @@ SC_MODULE (image_processor)
     void process() {
         while(true) {
             wait(_frame_start);
+
+	    /* Operate over all pixels */
             for(int i = 0; i < HEIGHT; i++) {
                 for(int j = 0; j < WIDTH; j++) {
                     /* Update first time pixel values */

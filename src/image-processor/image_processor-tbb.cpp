@@ -6,7 +6,7 @@
 
 #include "image_processor.cpp"
 
-#define TEST_ITERATIONS 50
+#define TEST_ITERATIONS 10
 
 /* Get the exact expected value */
 int
@@ -29,6 +29,7 @@ sc_main (int argc, char* argv[])
 
     sc_signal<bool>   enable;
     sc_signal<sc_uint<PIXEL_WIDTH>> pix_data;
+    sc_signal<sc_uint<PIXEL_WIDTH>> pix_data_out;
     sc_signal<sc_uint<ADDRESS_WIDTH>> pix_address;
 
     int i = 0;
@@ -38,6 +39,7 @@ sc_main (int argc, char* argv[])
     image_processor processor("GRAYSCALER");
     processor.enable(enable);
     processor.pix_data(pix_data);
+    processor.pix_data_out(pix_data_out);
     processor.pix_address(pix_address);
 
     sc_start(1,SC_NS);
@@ -67,8 +69,8 @@ sc_main (int argc, char* argv[])
                * available
                */
         total_error += abs((int) pix_data.read() - rgb12_to_gray(random_pixel));
-        printf("input pixel: %x\tsystemC output = %x\tpix_data.read() = %x\n",
-               random_pixel, (int)pix_data.read(),  rgb12_to_gray(random_pixel));
+        printf("input pixel: %x\tsystemC output = %x\texpected output = %x\n",
+               random_pixel, (int)pix_data_out.read(),  rgb12_to_gray(random_pixel));
 
 
         enable.write(0);
