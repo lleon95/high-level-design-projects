@@ -361,7 +361,15 @@ Debido a que el procesamiento de video ser\'a realizado en software,
 requerir\'a de un m\'odulo de memoria para almacenar la imagen antes 
 y despu\'es del procesamiento. Esta memoria servir\'a, adem\'as como puente
 entre los m\'odulos de decodificaci\'on, procesamiento y codificaci'\on, por
-lo que se requiere de un bus que permita interconectar estos m\'odulos
+lo que se requiere de un bus que permita interconectar estos m\'odulos.
+
+Aparte de una memoria, se requiere un procesador que permita ejecutar los
+algoritmos de procesamiento de imagen propuestos para el 
+\emph{video processor}. Para este caso, se preferir\'a un procesador 
+vectorial, debido al manejo de memoria que se requiere para lograr mantener
+el requerimiento de \emph{real-time} para la transmisi\'on. Un ejemplo de 
+procesador a utilizar es un GPU (Unidad de procesamiento gr\'afico por sus
+siglas en ingl\'es).
 
 \section{Conclusiones y Recomendaciones}
 
