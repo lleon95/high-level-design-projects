@@ -228,17 +228,11 @@ DSP, Image processing, Image edge detection, Image filtering
 %------------------------------- INTRODUCTION ---------------------------------%
 %\section{Introducci\'on}
 %\label{sec:introduction}
-
-
-
-
-
-
 % ------------------------------- PRE-DESIGN --------------------------------- %
 \section{Especificaci\'on y Requerimientos}
 \label{sec:req}
 
-\subsection{Requerimientos}
+\subsection{Requerimientos del sistema}
 
 En este proyecto se implementar\'a un sistema de procesamiento de
 video descrito a continuacion.  El procesador de video debe recibir la
@@ -265,7 +259,7 @@ es como se presenta en la figura \ref{fig:processing_unit_example}.
   \begin{subfigure}{0.45\columnwidth}
       \centering
       \includegraphics[width=\columnwidth]{img/bike_sobel.jpg}
-      \caption{Salida del modulo de procesamiento de video}
+      \caption{Salida del m\'odulo de procesamiento de video}
       \label{fig:bike_sobel}
   \end{subfigure}
   \hfill
@@ -287,8 +281,7 @@ El sistema adem\'as tendra los siguientes requerimientos:
 \label{sec:design}
 
 Basado en los requerimientos de la secci\'on \ref{sec:req} se deriva
-el dise\~no tentativo para la aplicaci\'on presentado en la figura
-\ref{fig:block_diagram}.
+el dise\~no para la aplicaci\'on presentado en la figura \ref{fig:block_diagram}.
 
 \begin{figure}
   \centering
@@ -333,7 +326,7 @@ el dise\~no tentativo para la aplicaci\'on presentado en la figura
 
 El particionamiento ser\'a realizado de una manera funcional, es decir
 se iniciara con las distintas funcionalidades a implementar y luego se
-tomar\'a se decidir\'a en seg\'un la funcionalidad y los
+decidir\'a seg\'un la funcionalidad y los
 requerimientos establecidos para decidir si el m\'odulo ser\'a
 implementado en hardware o en software.
 
@@ -361,7 +354,7 @@ Por otro lado, el procesador de imagen ser\'a implementado en software,
 debido a que este es m\'as apto para poder representar algoritmos
 complejos con una alta precisi\'on. Adem\'as, estos son capaces de ser
 modificados con una alta facilidad para extender sus capacidades, 
-ya que los elementos de hardware son reconfigurables.
+ya que los elementos de software son reconfigurables.
 
 Debido a que el procesamiento de video ser\'a realizado en software, 
 requerir\'a de un m\'odulo de memoria para almacenar la imagen antes 
@@ -377,11 +370,33 @@ el requerimiento de \emph{real-time} para la transmisi\'on. Un ejemplo de
 procesador a utilizar es un GPU (Unidad de procesamiento gr\'afico por sus
 siglas en ingl\'es).
 
+Adem\'as, se seleccion\'o la partici\'on mencionada porque se tiene la intenci\'on
+de poder modificar el procesamiento una vez que el sistema est\'e implementado. 
+Esto para tener la posibilidad de implementar cualquier otro algoritmo y que se 
+cuente con el tiempo necesario de procesamiento sin afectar el rendimiento 
+del sistema. Es decir, se est\'a dejando abierta la posibilidad de tardar 
+m\'as en el procesamiento.
+
 %\section{Conclusiones y Recomendaciones}
 
 %------------------------------ CONCLUSIONS -----------------------------------%
+Se presentaron los requerimientos para un sistema de adquisici\'on y procesamiento
+de video que sigue el est\'andar VGA que opera a 60 cuadros por segundo y con una
+latencia m\'axima de 10 ms.
 
+El sistema propuesto procesar\'a la se\~nal adquirida cambi\'andola a escala de
+grises y con un resaltamiento de bordes.
 
+El sistema se dividir\'a en cinco m\'odulos: ADC, decodificador, procesador, 
+codificador y DAC. De los cuales, el ADC y el DAC son de se\~nal mixta.
+
+Los m\'odulos "Decodificador", "Procesador" y "codificador", ser\'an modelados con los 
+modelos de abstracci\'on \textit{loosely timed}, \textit{Programmer's view} y 
+\text{Approximately Timed} respectivamente.
+
+Respecto a la partici\'on Hardware/Software, los m\'odulos de codificador y 
+decodificador ser\'an implementados por hardware, mientras que el procesador lo 
+ser\'a por software.
 
 %---------------------------- REFERENCES --------------------------------------%
 %\newpage
@@ -391,5 +406,3 @@ siglas en ingl\'es).
 
 % that's all folks
 \end{document}
-
-
