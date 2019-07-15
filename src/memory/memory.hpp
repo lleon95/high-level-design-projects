@@ -1,5 +1,7 @@
+#ifndef _MEMORY_HPP_
+#define _MEMORY_HPP_
 
-#include <systemc.h>
+#include "systemc.h"
 
 /* Matches pixel width */
 #define DATA_WIDTH 12
@@ -34,3 +36,5 @@ SC_MODULE (memory)
     } /* End of Constructor */
 
 }; /* End of memory module */
+
+#endif /* _MEMORY_HPP_ */

@@ -5,11 +5,11 @@
 
 #include "memory.hpp"
 
-#define _1ST_VALUE 0x123
-#define _2ND_VALUE 0x456
-#define _3RD_VALUE 0x798
-#define _4TH_VALUE 0xabc
-#define _5TH_VALUE 0xdef
+#define DELAY 5
+
+#define ADDRESS_START 0x10
+
+const int values[5] = {0x123, 0x456, 0x789, 0xabc, 0xdef};
 
 int
 sc_main (int argc, char* argv[])
@@ -24,72 +24,34 @@ sc_main (int argc, char* argv[])
     /* Dump the desired signals */
     sc_trace(wf, data, "data");
     sc_trace(wf, address, "address");
-    sc_trace(wf, ram._ramdata[0x10], "data0");
-    sc_trace(wf, ram._ramdata[0x11], "data1");
-    sc_trace(wf, ram._ramdata[0x12], "data2");
-    sc_trace(wf, ram._ramdata[0x13], "data3");
-    sc_trace(wf, ram._ramdata[0x14], "data4");
+    sc_trace(wf, ram._ramdata[ADDRESS_START], "data0");
+    sc_trace(wf, ram._ramdata[ADDRESS_START + 1], "data1");
+    sc_trace(wf, ram._ramdata[ADDRESS_START + 2], "data2");
+    sc_trace(wf, ram._ramdata[ADDRESS_START + 3], "data3");
+    sc_trace(wf, ram._ramdata[ADDRESS_START + 4], "data4");
 
     sc_start(0,SC_NS);
     cout << "@" << sc_time_stamp() << endl;
-    printf("WR: addr = 0x10, data = %x\n", _1ST_VALUE);
-    printf("WR: addr = 0x12, data = %x\n", _2ND_VALUE);
-    printf("WR: addr = 0x13, data = %x\n", _3RD_VALUE);
-    printf("WR: addr = 0x14, data = %x\n", _4TH_VALUE);
-    printf("WR: addr = 0x15, data = %x\n", _5TH_VALUE);
+    sc_start(DELAY,SC_NS);
 
-    data = _1ST_VALUE;
-    address = 0x10;
-    ram.write(address, data);
-    sc_start(3,SC_NS);
-    data = ram.read(address);
-    printf("Rd: addr = 0x10, data = %x\n", (int) data);
+    /* Write all values */
+    for(int i = 0; i<5; i++) {
+      data = values[i];
+      address = ADDRESS_START + i;
+      ram.write(address, data);
+      printf("WR: addr = %x, data = %x\n", (int)address, values[i]);
+      sc_start(DELAY,SC_NS);
+    }
+    sc_start(DELAY,SC_NS);
 
-    data = _2ND_VALUE;
-    address = 0x11;
-    ram.write(address, data);
+    printf("\n");
 
-    sc_start(10,SC_NS);
-    data = _3RD_VALUE;
-    address = 0x12;
-    ram.write(address, data);
-
-    sc_start(10,SC_NS);
-    data = _4TH_VALUE;
-    address = 0x13;
-    ram.write(address, data);
-
-    sc_start(10,SC_NS);
-    data = _5TH_VALUE;
-    address = 0x14;
-    ram.write(address, data);
-
-    sc_start(10,SC_NS);
-
-    address = 0x10;
-    data = ram.read(address);
-    sc_start(10,SC_NS);
-    printf("Rd: addr = 0x10, data = %x\n",(int) data);
-
-    address = 0x11;
-    data = ram.read(address);
-    sc_start(10,SC_NS);
-    printf("Rd: addr = 0x11, data = %x\n",(int) data);
-
-    address = 0x12;
-    data = ram.read(address);
-    sc_start(10,SC_NS);
-    printf("Rd: addr = 0x12, data = %x\n",(int) data);
-
-    address = 0x13;
-    data = ram.read(address);
-    sc_start(10,SC_NS);
-    printf("Rd: addr = 0x13, data = %x\n",(int) data);
-
-    address = 0x14;
-    data = ram.read(address);
-    sc_start(10,SC_NS);
-    printf("Rd: addr = 0x13, data = %x\n",(int) data);
+    for(int i = 0; i < 5; i++) {
+      address = ADDRESS_START + i;
+      data = ram.read(address);
+      sc_start(DELAY,SC_NS);
+      printf("Rd: addr = %x, data = %x\n", (int)address, (int) data);
+    }
 
     cout << "@" << sc_time_stamp() <<" Terminating simulation\n" << endl;
     sc_close_vcd_trace_file(wf);

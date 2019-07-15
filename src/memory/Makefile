@@ -1,6 +1,7 @@
 SYSTEMC_HOME=/opt/systemc
 GCC=g++
-LDFLAGS= -lsystemc
+LDFLAGS= -lsystemc -L $(SYSTEMC_HOME)/lib-linux64
+INCLUDES= -I$(SYSTEMC_HOME)/include
 CXXFLAGS=-Wall -Wextra -g -o0
 
 MODULE=memory
