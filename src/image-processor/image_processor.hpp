@@ -2,43 +2,53 @@
 #define _IMAGE_PROCESSOR_HPP_
 
 #include "systemc.h"
+#include "tlm.h"
+#include "tlm_utils/simple_initiator_socket.h"
+#include "tlm_utils/simple_target_socket.h"
 
 #define PIXEL_WIDTH 12
 #define CHANNEL_WIDTH 4
 
-#define ADDRESS_WIDTH 20
-#define INPUT_IMAGE_START 0x0
-#define OUTPUT_IMAGE_START 0x4b000
-
 #define INTERRUPT_DELAY 0
 
+#define WIDTH 640
+#define BUFFER_SIZE (WIDTH * 3)
 
-SC_MODULE (image_processor)
+#define PACKAGE_LENGTH 2 /* 16 bits package length */
+
+
+struct image_processor : sc_module
 {
-    sc_in<bool> enable;
-    sc_in<sc_uint<PIXEL_WIDTH> > in_pixels[9];
-    sc_out<sc_uint<PIXEL_WIDTH> > pix_out;
-
-    sc_event _frame_start;
+    tlm_utils::simple_target_socket<image_processor> target_socket;
+    tlm_utils::simple_initiator_socket<image_processor> initiator_socket;
+   
+    sc_event _pixel_ready;
 
     /* Local Variables */
     sc_uint<PIXEL_WIDTH> current_pixel;
     
     sc_uint<CHANNEL_WIDTH> gray;
 
-    sc_uint<CHANNEL_WIDTH> pixels[3][3];
+    /* Store 3 lines in the internal buffer */
+    sc_uint<CHANNEL_WIDTH> pixel_buffer[BUFFER_SIZE];
+    int pixel_index;
 
     /* Interrupt Handler */
-    void frame_start();
+    void pixel_ready();
 
     void process();
 
-    SC_CTOR(image_processor) {
-        cout<<"Executing new"<<endl;
-        SC_THREAD(process);
+    void return_pixel();
 
-        SC_METHOD(frame_start);
-        sensitive << enable;
+  /* Function to receive transfers  */
+  virtual void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay);
+
+  SC_CTOR(image_processor) : target_socket("target_socket") {
+        SC_THREAD(process);
+	
+	target_socket.register_b_transport(this, &image_processor::b_transport);
+
+	pixel_index = 0;
     } /* End of Constructor */
 
 }; /* End of Module counter */
