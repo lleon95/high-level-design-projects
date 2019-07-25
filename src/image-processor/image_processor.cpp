@@ -83,10 +83,10 @@ image_processor::return_pixel()
 {
     tlm::tlm_generic_payload trans;
     /* Pointer to be passed to the target, target is resposible for freeing it */
-    sc_uint<PIXEL_WIDTH>* return_pixel = new sc_uint<PIXEL_WIDTH>;
+    int* return_pixel = new int;
     sc_time delay = sc_time(INTERRUPT_DELAY, SC_NS);
 
-    *return_pixel = current_pixel;
+    *return_pixel = (int)current_pixel;
 
     trans.set_command( tlm::TLM_WRITE_COMMAND );
     trans.set_data_ptr( reinterpret_cast<unsigned char*>(return_pixel) );
@@ -97,8 +97,6 @@ image_processor::return_pixel()
     trans.set_response_status(
         tlm::TLM_INCOMPLETE_RESPONSE ); /* Mandatory initial value */
 
-    printf("initiation transfer SysC: %x\t%x\n", (int)current_pixel, (int)*return_pixel);
-    
     initiator_socket->b_transport( trans, delay );  // Blocking transport call
 }
 
@@ -120,8 +118,8 @@ image_processor::process()
 
         /* Write value back*/
         return_pixel();
-	
-	pixel_index = (pixel_index + 1) % BUFFER_SIZE;
+
+        pixel_index = (pixel_index + 1) % BUFFER_SIZE;
     }
 }
 
@@ -144,10 +142,10 @@ image_processor::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
 
     /* Processor only accepts write operations */
     if ( cmd == tlm::TLM_WRITE_COMMAND ) {
-      /* Copy pixels to internal buffer */
-      current_pixel = *ptr_16_bits & 0xFFF;
+        /* Copy pixels to internal buffer */
+        current_pixel = *ptr_16_bits & 0xFFF;
 
-      pixel_ready();
+        pixel_ready();
     }
 
     trans.set_response_status( tlm::TLM_OK_RESPONSE );

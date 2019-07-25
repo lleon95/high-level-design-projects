@@ -49,6 +49,10 @@ struct image_processor : sc_module
 	target_socket.register_b_transport(this, &image_processor::b_transport);
 
 	pixel_index = 0;
+
+	for(int i = 0; i < BUFFER_SIZE; i++) {
+	  pixel_buffer[i] = 0;
+	}
     } /* End of Constructor */
 
 }; /* End of Module counter */
