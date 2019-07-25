@@ -48,7 +48,7 @@ SC_MODULE(Top)
     target_address.write(1);
     outgoing_buffer.write(20);
     initiator_destination_address.write(1);
-    initiator->write();
+    initiator->write(25);
 
     wait(sc_time(BUS_DELAY, SC_NS));
 

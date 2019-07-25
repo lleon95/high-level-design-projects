@@ -59,7 +59,8 @@ struct Initiator: sc_module
     SC_THREAD(thread_process);   
   }  
 
-  void write() {
+  void write(data_in) {
+    data = data_in;
     write_event.notify();
   } 
    
@@ -135,7 +136,7 @@ struct Initiator: sc_module
     {
     case tlm::END_RESP:
       wait(delay);
-      cout << name() << " END_RESP RECEIVED" << " TRANS ID " << id_extension->transaction_id << " at time " << sc_time_stamp() << endl;
+      cout << name() << " END_RESP RECEIVED" << " at time " << sc_time_stamp() << endl;
       return tlm::TLM_COMPLETED;
       break;
     case tlm::BEGIN_RESP:
