@@ -4,6 +4,8 @@
 
 #include "communication.hpp"
 
+#define NODES 5
+
 SC_MODULE(Node)
 {
   Initiator *initiator;
@@ -37,12 +39,10 @@ SC_MODULE(Node)
   }
 
   void thread_process(){
-    target_address.write(target_address);
-    for(int i = 0; i < 5; i++){
-      initiator->addr = i;
-      initiator->data = 16 * i;
-      wait(sc_time(50, SC_NS));
-       initiator->write();
+    target_address.write(addr);
+    for(int i = 0; i < NODES; i++){
+      wait(sc_time(BUS_DELAY, SC_NS));
+      initiator->write(i, 16 * i + 1);
     }
   }
 
@@ -50,7 +50,7 @@ SC_MODULE(Node)
     bool transfer_next = target_transfer_package.read();
     unsigned short destination = target_destination_address.read();
     unsigned short data = incoming_buffer.read();
-    unsigned short my_addr = target_address.read();
+    unsigned short my_addr = addr;
 
     cout << "Destination address: " <<  destination
     << " Me: " << my_addr << " Action - Transfer: "
@@ -59,9 +59,8 @@ SC_MODULE(Node)
 
     /* Transfer to the next */
     if(transfer_next) {
-      initiator->addr = destination;
-      initiator->data = data;
-      initiator->write();
+      initiator->write(destination, data);
+      cout << "Retransmitted to: " << destination << endl;
     } else {
       cout << "Received by: " << my_addr << endl;
     }
@@ -78,12 +77,13 @@ int sc_main(int argc, char* argv[])
   Node node4("node4");
   Node node5("node5");
 
+
   /* Address assignment */
-  node1.addr = 1;
-  node2.addr = 2;
-  node3.addr = 3;
-  node4.addr = 4;
-  node5.addr = 5;
+  node1.addr = 0;
+  node2.addr = 1;
+  node3.addr = 2;
+  node4.addr = 3;
+  node5.addr = 4;
 
   /* Binding - Ring */
   node1.initiator->socket.bind(node2.target->socket);
@@ -91,7 +91,6 @@ int sc_main(int argc, char* argv[])
   node3.initiator->socket.bind(node4.target->socket);
   node4.initiator->socket.bind(node5.target->socket);
   node5.initiator->socket.bind(node1.target->socket);
-
 
   sc_start();
   return 0;

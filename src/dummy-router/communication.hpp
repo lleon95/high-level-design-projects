@@ -58,7 +58,7 @@ using namespace std;
 #include "tlm_utils/simple_target_socket.h"
 #include "tlm_utils/peq_with_cb_and_phase.h"
 
-#define DEBUG
+//#define DEBUG
 
 //static ofstream fout("foo.txt");
 
@@ -161,22 +161,26 @@ struct Initiator: sc_module
     SC_THREAD(thread_process);
   }
 
-  int addr, data;
+  int addr, *datum;
   sc_event write_req;
 
-  void write() {
+  void write(int adr, int data) {
+    addr = addr;
+    datum = new int();
+    *datum = data;
     write_req.notify();
   }
 
   void thread_process()
   {
-    tlm::tlm_generic_payload* trans;
     tlm::tlm_phase phase;
     sc_time delay;
 
     while(true) {
+      tlm::tlm_generic_payload* trans;
       wait(write_req);
       int adr = addr;
+      int *data = datum;
       tlm::tlm_command cmd = tlm::TLM_WRITE_COMMAND;
 
       // Grab a new transaction from the memory manager
@@ -186,7 +190,7 @@ struct Initiator: sc_module
       // Set all attributes except byte_enable_length and extensions (unused)
       trans->set_command( cmd );
       trans->set_address( adr );
-      trans->set_data_ptr( reinterpret_cast<unsigned char*>(&data) );
+      trans->set_data_ptr( reinterpret_cast<unsigned char*>(data) );
       trans->set_data_length( 4 );
       trans->set_streaming_width( 4 ); // = data_length to indicate no streaming
       trans->set_byte_enable_ptr( 0 ); // 0 indicates unused
@@ -202,8 +206,10 @@ struct Initiator: sc_module
       // Timing annotation models processing time of initiator prior to call
       delay = sc_time(rand_ps(), SC_PS);
 
+      /* 
       cout << name() <<" " << hex << adr << " new, cmd=" << (cmd ? 'W' : 'R')
            << ", data=" << hex << data<< " at time " << sc_time_stamp() << endl;
+      */
 
       // Non-blocking transport call on the forward path
       tlm::tlm_sync_enum status;
@@ -286,8 +292,10 @@ struct Initiator: sc_module
     sc_dt::uint64    adr = trans.get_address();
     int*             ptr = reinterpret_cast<int*>( trans.get_data_ptr() );
 
+    /*
     cout<< name() << " " << hex << adr << " check, cmd=" << (cmd ? 'W' : 'R')
          << ", data=" << hex << *ptr << " at time " << sc_time_stamp() << endl;
+    */
 
     // Allow the memory manager to free the transaction object
     trans.release();
@@ -432,6 +440,7 @@ struct Target: sc_module
         unsigned int     len = trans.get_data_length();
 
         incoming_buffer.write(*reinterpret_cast<int*>(ptr));
+        free(ptr);
         destination_address.write(adr);
         transfer_package.write(adr != module_address.read());
 
@@ -439,7 +448,9 @@ struct Target: sc_module
         new_package.write(!last_state);
         last_state = !last_state;
 
+        /* 
         cout << name() << " " << hex << adr << " Execute WRITE, data = " << *reinterpret_cast<int*>(ptr) << endl;
+        */
 
         trans.set_response_status( tlm::TLM_OK_RESPONSE );
 
