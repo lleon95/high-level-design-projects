@@ -381,7 +381,7 @@ struct Target: sc_module
       trans.acquire();
 
       // Put back-pressure on initiator by deferring END_REQ until pipeline is clear
-      if (n_trans == 2)
+      if (n_trans == 10)
         end_req_pending = &trans;
       else
       {
