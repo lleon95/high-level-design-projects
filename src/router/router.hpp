@@ -5,7 +5,7 @@
 #include "communication.hpp"
 
 /* FIXME - Include your nodes below */
-#include "dummy-node.cpp"
+#include "node.hpp"
 
 SC_MODULE(Router)
 {
