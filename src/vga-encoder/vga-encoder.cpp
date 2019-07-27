@@ -87,47 +87,47 @@ SC_MODULE (vga_encoder)
             pixel_unqueue.write(0);
             col = 0;
             row = 0;
-            next_state_t.notify(DELAY_VSYNC,SC_NS);
+            next_state_t.notify(DELAY_VSYNC, SC_NS);
             break;
         case FSM_V_BACK_PORCH:
             v_sync.write(1);
             pixel_unqueue.write(0);
-            next_state_t.notify(DELAY_V_BACK_PORCH,SC_NS);
+            next_state_t.notify(DELAY_V_BACK_PORCH, SC_NS);
             break;
         case FSM_V_FRONT_PORCH:
             v_sync.write(1);
             pixel_unqueue.write(0);
-            next_state_t.notify(DELAY_V_FRONT_PORCH,SC_NS);
+            next_state_t.notify(DELAY_V_FRONT_PORCH, SC_NS);
             break;
         case FSM_H_SYNC:
             h_sync.write(0);
             pixel_unqueue.write(0);
             col = 0;
-            next_state_t.notify(DELAY_H_SYNC,SC_NS);
+            next_state_t.notify(DELAY_H_SYNC, SC_NS);
             break;
         case FSM_H_BACK_PORCH:
             h_sync.write(1);
             pixel_unqueue.write(0);
-            next_state_t.notify(DELAY_H_BACK_PORCH,SC_NS);
+            next_state_t.notify(DELAY_H_BACK_PORCH, SC_NS);
             break;
         case FSM_H_FRONT_PORCH:
             h_sync.write(1);
             pixel_unqueue.write(0);
             row++;
-            next_state_t.notify(DELAY_H_FRONT_PORCH,SC_NS);
+            next_state_t.notify(DELAY_H_FRONT_PORCH, SC_NS);
             break;
         case FSM_SEND_PIXELS:
             h_sync.write(1);
             pixel_unqueue.write(1);
             //send_pixel();
             col++;
-            next_state_t.notify(DELAY_SEND_PIXELS,SC_PS);
+            next_state_t.notify(DELAY_SEND_PIXELS, SC_PS);
             break;
         default:
             pixel_unqueue.write(0);
             h_sync.write(1);
             v_sync.write(1);
-            next_state_t.notify(DELAY_DEFAULT,SC_NS);
+            next_state_t.notify(DELAY_DEFAULT, SC_NS);
             break;
         }
     }
@@ -137,7 +137,7 @@ SC_MODULE (vga_encoder)
         col = 0;
         row = 0;
         next_state = FSM_VSYNC;
-        next_state_t.notify(READ_DELAY,SC_NS);
+        next_state_t.notify(READ_DELAY, SC_NS);
     }
     void write() {
         wr_t.notify(WRITE_DELAY, SC_NS);
@@ -157,15 +157,15 @@ SC_MODULE (vga_encoder)
     void rd() {
         while(true) {
             wait(rd_t);
-            pixel_counter.write(COLS*row + col);
+            pixel_counter.write(COLS * row + col);
         }
     }
 
     /* Datapath */
     void send_pixel() {
-        red_channel.write(pixel(11,8));
-        green_channel.write(pixel(7,4));
-        blue_channel.write(pixel(3,0));
+        red_channel.write(pixel(11, 8));
+        green_channel.write(pixel(7, 4));
+        blue_channel.write(pixel(3, 0));
     }
 
 };

@@ -1,6 +1,7 @@
 #!/bin/bash
 
-INDENT_FLAGS="--style=1tbs --indent=spaces --add-braces --break-return-type --convert-tabs --max-code-length=80 "
+INDENT_FLAGS="--style=1tbs --indent=spaces --add-braces
+--break-return-type --convert-tabs --max-code-length=80 --pad-oper"
 
 if ! type astyle 2>/dev/null; then
     echo "Please run the following command to install astyle:"

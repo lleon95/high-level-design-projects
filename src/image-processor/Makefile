@@ -16,4 +16,4 @@ test:
 	./$(MODULE)
 
 clean:
-	rm -f $(MODULE)
+	rm -f $(MODULE) $(MODULE).vcd
