@@ -41,6 +41,9 @@
 
 
 // Needed for the simple_target_socket
+#ifndef __COMMUNICATION_HPP__
+#define __COMMUNICATION_HPP__
+
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
 #include <queue>
@@ -219,4 +222,4 @@ struct Target: sc_module
   }
 };
 
-
+#endif
