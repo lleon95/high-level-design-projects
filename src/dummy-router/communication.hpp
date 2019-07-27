@@ -83,6 +83,8 @@ typedef struct queue{
   bool cmd;
 } queue_element;
 
+static ID_extension* id_extension = new ID_extension;
+
 /*
   Initiator
  */
@@ -110,6 +112,7 @@ struct Initiator: sc_module
 
     initiator_queue.push(new_transaction);
 
+
     write_req.notify();
   }
 
@@ -117,17 +120,17 @@ struct Initiator: sc_module
   {
     tlm::tlm_phase phase;
     sc_time delay = sc_time(BUS_DELAY, SC_NS);;
+    
 
     while(true) {
       wait(write_req);
-
-      /* Create new transaction */
-      tlm::tlm_generic_payload* trans = new tlm::tlm_generic_payload;
-      ID_extension* id_extension = new ID_extension;
-      trans->set_extension( id_extension );
       
-      /* Unqueue next transaction */
-      if(!initiator_queue.empty()) {
+      while(!initiator_queue.empty()) {
+        /* Create new transaction */
+        tlm::tlm_generic_payload* trans = new tlm::tlm_generic_payload;
+        trans->set_extension( id_extension );
+
+        /* Unqueue next transaction */
         queue_element next_transaction = initiator_queue.front();
         initiator_queue.pop();
         int adr = next_transaction.address;
@@ -154,7 +157,9 @@ struct Initiator: sc_module
 
         /* Bus delay for next transaction */
         wait(delay);
+        id_extension->transaction_id++;
       }
+
     }
   }
 };
@@ -164,11 +169,12 @@ struct Initiator: sc_module
  */
 struct Target: sc_module
 {
-  sc_out<sc_uint<BUS_WIDTH> > incoming_buffer;
-  sc_in<sc_uint<ADDRESS_WIDTH> > module_address;
-  sc_out<sc_uint<ADDRESS_WIDTH> > destination_address;
-  sc_out<bool > transfer_package;
-  sc_out<bool > command;
+  unsigned short incoming_buffer;
+  unsigned short module_address;
+  unsigned short id_extension;
+  unsigned short destination_address;
+  bool transfer_package;
+  bool command;
   sc_event new_package;
 
   tlm_utils::simple_target_socket<Target> socket;
@@ -187,16 +193,19 @@ struct Target: sc_module
     unsigned int len = trans.get_data_length();
     unsigned char* byt = trans.get_byte_enable_ptr();
     unsigned int wid = trans.get_streaming_width();
+    ID_extension* id_extension_tlm = new ID_extension;
+    trans.get_extension( id_extension_tlm ); 
 
     /* Check */
     if (byt != 0 || len > 4 || wid < len)
       SC_REPORT_ERROR("TLM-2", "Target does not support given generic payload transaction");
 
     /* Write back */
-    incoming_buffer.write(*reinterpret_cast<int*>(ptr));
-    destination_address.write(adr);
-    transfer_package.write(adr != module_address.read());
+    incoming_buffer = (*reinterpret_cast<int*>(ptr));
+    destination_address = adr;
+    transfer_package = (adr != module_address);
     command = (tlm_cmd == tlm::TLM_WRITE_COMMAND); /* Write = 1 */
+    id_extension = id_extension_tlm->transaction_id;
 
     /* Alert about new package */
     new_package.notify();

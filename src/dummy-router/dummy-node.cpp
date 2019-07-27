@@ -11,13 +11,6 @@ SC_MODULE(Node)
   Initiator *initiator;
   Target    *target;
   int addr;
-
-  sc_signal<sc_uint<BUS_WIDTH> > incoming_buffer;
-  sc_signal<sc_uint<ADDRESS_WIDTH> > target_address;
-  sc_signal<sc_uint<ADDRESS_WIDTH> > initiator_destination_address;
-  sc_signal<sc_uint<ADDRESS_WIDTH> > target_destination_address;
-  sc_signal<bool > target_transfer_package;
-  sc_signal<bool > target_command;
   sc_event * incoming_notification;
 
   SC_CTOR(Node)
@@ -26,11 +19,6 @@ SC_MODULE(Node)
     initiator = new Initiator("initiator");
     target    = new Target   ("target");
 
-    target->incoming_buffer(incoming_buffer);
-    target->destination_address(target_destination_address);
-    target->module_address(target_address);
-    target->transfer_package(target_transfer_package);
-    target->command(target_command);
     incoming_notification = &(target->new_package);
 
     SC_THREAD(thread_process); 
@@ -38,7 +26,7 @@ SC_MODULE(Node)
   }
 
   void thread_process(){
-    target_address.write(addr);
+    target->module_address = addr;
     for(int i = 0; i < NODES; i++){
       wait(sc_time(BUS_DELAY, SC_NS));
       initiator->write(i, 16 * i + 1, rand() % 2);
@@ -48,21 +36,21 @@ SC_MODULE(Node)
   void reading_process() {
     while(true) {
       wait(*(incoming_notification));
-      bool transfer_next = target_transfer_package.read();
-      bool command = target_command.read();
-      unsigned short destination = target_destination_address.read();
-      unsigned short data = incoming_buffer.read();
+      bool transfer_next = target->transfer_package;
+      bool command = target->command;
+      unsigned short destination = target->destination_address;
+      unsigned short data = target->incoming_buffer;
       wait(sc_time(BUS_DELAY, SC_NS));
       
-      cout << "Destination address: " <<  destination
+      cout << "Trans ID: " << target->id_extension << " Destination address: " <<  destination
       << " Me: " << addr << " Action - Transfer: "
       << transfer_next << " Data: "
-      << incoming_buffer << endl;
+      << data << " Command: " << command << endl;
 
       /* Transfer to the next */
       if(transfer_next) {
         initiator->write(destination, data, command);
-        cout << "Retransmitted to: " << destination << endl;
+        cout << "Retransmitted to: " << addr + 1 << endl;
       } else {
         cout << "Received by: " << addr << endl;
       }
