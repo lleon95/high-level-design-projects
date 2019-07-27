@@ -43,7 +43,9 @@
 // Needed for the simple_target_socket
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include "systemc"
+#include <queue>
+#include <systemc>
+
 using namespace sc_core;
 using namespace sc_dt;
 using namespace std;
@@ -60,473 +62,152 @@ using namespace std;
 
 //#define DEBUG
 
-//static ofstream fout("foo.txt");
-
-// **************************************************************************************
-// User-defined memory manager, which maintains a pool of transactions
-// **************************************************************************************
-
-class mm: public tlm::tlm_mm_interface
-{
-  typedef tlm::tlm_generic_payload gp_t;
-
-public:
-  mm() : free_list(0), empties(0)
-  #ifdef DEBUG
-  , count(0)
-  #endif
-  {}
-
-  gp_t* allocate();
-  void  free(gp_t* trans);
-
-private:
-  struct access
-  {
-    gp_t* trans;
-    access* next;
-    access* prev;
-  };
-
-  access* free_list;
-  access* empties;
-
-  #ifdef DEBUG
-  int     count;
-  #endif
+/* Generic Payload Extension for ID */
+struct ID_extension: tlm::tlm_extension<ID_extension> {
+  ID_extension() : transaction_id(0) {}
+  virtual tlm_extension_base* clone() const { // Must override pure virtual clone method
+    ID_extension* t = new ID_extension;
+    t->transaction_id = this->transaction_id;
+    return t;
+  }
+  virtual void copy_from(tlm_extension_base const &ext) {
+    transaction_id = static_cast<ID_extension const &>(ext).transaction_id;
+  }
+  unsigned int transaction_id;
 };
 
-mm::gp_t* mm::allocate()
-{
-  #ifdef DEBUG
-    cout << "----------------------------- Called allocate(), #trans = " << ++count << endl;
-  #endif
-  gp_t* ptr;
-  if (free_list)
-  {
-    ptr = free_list->trans;
-    empties = free_list;
-    free_list = free_list->next;
-  }
-  else
-  {
-    ptr = new gp_t(this);
-  }
-  return ptr;
-}
+/* Generic dynamic list */
+typedef struct queue{
+  unsigned short * datum;
+  sc_uint<ADDRESS_WIDTH> address;
+  bool cmd;
+} queue_element;
 
-void mm::free(gp_t* trans)
-{
-  #ifdef DEBUG
-    cout << "----------------------------- Called free(), #trans = " << --count << endl;
-  #endif
-  if (!empties)
-  {
-    empties = new access;
-    empties->next = free_list;
-    empties->prev = 0;
-    if (free_list)
-      free_list->prev = empties;
-  }
-  free_list = empties;
-  free_list->trans = trans;
-  empties = free_list->prev;
-}
-
-// Generate a random delay (with power-law distribution) to aid testing and stress the protocol
-int rand_ps()
-{
-  int n = rand() % 100;
-  n = n * n * n;
-  return n / 100;
-}
-
-// **************************************************************************************
-// Initiator module generating multiple pipelined generic payload transactions
-// **************************************************************************************
-
+/*
+  Initiator
+ */
 struct Initiator: sc_module
 {
-  // TLM-2 socket, defaults to 32-bits wide, base protocol
   tlm_utils::simple_initiator_socket<Initiator> socket;
+  std::queue<queue_element> initiator_queue;
 
   SC_CTOR(Initiator)
   : socket("socket")  // Construct and name socket
-  , request_in_progress(0)
-  , m_peq(this, &Initiator::peq_cb)
   {
-    // Register callbacks for incoming interface method calls
-    socket.register_nb_transport_bw(this, &Initiator::nb_transport_bw);
-
     SC_THREAD(thread_process);
   }
-
-  int addr, *datum;
+  
+  queue_element queue;
   sc_event write_req;
 
-  void write(int adr, int data) {
-    addr = addr;
-    datum = new int();
-    *datum = data;
+  void write(int adr, int datum, bool cmd) {
+
+    queue_element new_transaction;
+    new_transaction.address = adr;
+    new_transaction.cmd = cmd;
+    new_transaction.datum = new unsigned short;
+    *(new_transaction.datum) = datum;
+
+    initiator_queue.push(new_transaction);
+
     write_req.notify();
   }
 
   void thread_process()
   {
     tlm::tlm_phase phase;
-    sc_time delay;
+    sc_time delay = sc_time(BUS_DELAY, SC_NS);;
 
     while(true) {
-      tlm::tlm_generic_payload* trans;
       wait(write_req);
-      int adr = addr;
-      int *data = datum;
-      tlm::tlm_command cmd = tlm::TLM_WRITE_COMMAND;
 
-      // Grab a new transaction from the memory manager
-      trans = m_mm.allocate();
-      trans->acquire();
+      /* Create new transaction */
+      tlm::tlm_generic_payload* trans = new tlm::tlm_generic_payload;
+      ID_extension* id_extension = new ID_extension;
+      trans->set_extension( id_extension );
+      
+      /* Unqueue next transaction */
+      if(!initiator_queue.empty()) {
+        queue_element next_transaction = initiator_queue.front();
+        initiator_queue.pop();
+        int adr = next_transaction.address;
+        unsigned short * data = next_transaction.datum;
+        tlm::tlm_command cmd = 
+            static_cast<tlm::tlm_command>(next_transaction.cmd);
+      
+        /* Build the transaction */
+        trans->set_command( cmd );
+        trans->set_address( adr );
+        trans->set_data_ptr( reinterpret_cast<unsigned char*>(data) );
+        trans->set_data_length( BUS_WIDTH/8 );
+        trans->set_streaming_width( BUS_WIDTH/8 ); 
+        trans->set_byte_enable_ptr( 0 ); 
+        trans->set_dmi_allowed( false );
+        trans->set_response_status( tlm::TLM_INCOMPLETE_RESPONSE );
 
-      // Set all attributes except byte_enable_length and extensions (unused)
-      trans->set_command( cmd );
-      trans->set_address( adr );
-      trans->set_data_ptr( reinterpret_cast<unsigned char*>(data) );
-      trans->set_data_length( 4 );
-      trans->set_streaming_width( 4 ); // = data_length to indicate no streaming
-      trans->set_byte_enable_ptr( 0 ); // 0 indicates unused
-      trans->set_dmi_allowed( false ); // Mandatory initial value
-      trans->set_response_status( tlm::TLM_INCOMPLETE_RESPONSE ); // Mandatory initial value
+        /* Blocking call */
+        socket->b_transport( *trans, delay );
 
-      // Initiator must honor BEGIN_REQ/END_REQ exclusion rule
-      if (request_in_progress)
-        wait(end_request_event);
-      request_in_progress = trans;
-      phase = tlm::BEGIN_REQ;
+        /* Check response */
+        if ( trans->is_response_error() )
+          SC_REPORT_ERROR("TLM-2", "Response error from b_transport");
 
-      // Timing annotation models processing time of initiator prior to call
-      delay = sc_time(rand_ps(), SC_PS);
-
-      /* 
-      cout << name() <<" " << hex << adr << " new, cmd=" << (cmd ? 'W' : 'R')
-           << ", data=" << hex << data<< " at time " << sc_time_stamp() << endl;
-      */
-
-      // Non-blocking transport call on the forward path
-      tlm::tlm_sync_enum status;
-      status = socket->nb_transport_fw( *trans, phase, delay );
-
-      // Check value returned from nb_transport_fw
-      if (status == tlm::TLM_UPDATED)
-      {
-        // The timing annotation must be honored
-        m_peq.notify( *trans, phase, delay );
+        /* Bus delay for next transaction */
+        wait(delay);
       }
-      else if (status == tlm::TLM_COMPLETED)
-      {
-        // The completion of the transaction necessarily ends the BEGIN_REQ phase
-        request_in_progress = 0;
-
-        // The target has terminated the transaction
-        check_transaction( *trans );
-      }
-      wait( sc_time(rand_ps(), SC_PS) );
-    }
-
-  }
-
-  // TLM-2 backward non-blocking transport method
-
-  virtual tlm::tlm_sync_enum nb_transport_bw( tlm::tlm_generic_payload& trans,
-                                              tlm::tlm_phase& phase, sc_time& delay )
-  {
-    // The timing annotation must be honored
-    m_peq.notify( trans, phase, delay );
-    return tlm::TLM_ACCEPTED;
-  }
-
-  // Payload event queue callback to handle transactions from target
-  // Transaction could have arrived through return path or backward path
-
-  void peq_cb(tlm::tlm_generic_payload& trans, const tlm::tlm_phase& phase)
-  {
-    #ifdef DEBUG
-      if (phase == tlm::END_REQ)
-        cout << name() << " " <<hex << trans.get_address() << " END_REQ at " << sc_time_stamp() << endl;
-      else if (phase == tlm::BEGIN_RESP)
-        cout << name() << " " <<hex << trans.get_address() << " BEGIN_RESP at " << sc_time_stamp() << endl;
-    #endif
-
-    if (phase == tlm::END_REQ || (&trans == request_in_progress && phase == tlm::BEGIN_RESP))
-    {
-      // The end of the BEGIN_REQ phase
-      request_in_progress = 0;
-      end_request_event.notify();
-    }
-    else if (phase == tlm::BEGIN_REQ || phase == tlm::END_RESP)
-      SC_REPORT_FATAL("TLM-2", "Illegal transaction phase received by initiator");
-
-    if (phase == tlm::BEGIN_RESP)
-    {
-      check_transaction( trans );
-
-      // Send final phase transition to target
-      tlm::tlm_phase fw_phase = tlm::END_RESP;
-      sc_time delay = sc_time(rand_ps(), SC_PS);
-      socket->nb_transport_fw( trans, fw_phase, delay );
-      // Ignore return value
     }
   }
-
-  // Called on receiving BEGIN_RESP or TLM_COMPLETED
-  void check_transaction(tlm::tlm_generic_payload& trans)
-  {
-    if ( trans.is_response_error() )
-    {
-      char txt[100];
-      sprintf(txt, "Transaction returned with error, response status = %s",
-                   trans.get_response_string().c_str());
-      SC_REPORT_ERROR("TLM-2", txt);
-    }
-
-    tlm::tlm_command cmd = trans.get_command();
-    sc_dt::uint64    adr = trans.get_address();
-    int*             ptr = reinterpret_cast<int*>( trans.get_data_ptr() );
-
-    /*
-    cout<< name() << " " << hex << adr << " check, cmd=" << (cmd ? 'W' : 'R')
-         << ", data=" << hex << *ptr << " at time " << sc_time_stamp() << endl;
-    */
-
-    // Allow the memory manager to free the transaction object
-    trans.release();
-  }
-
-  mm   m_mm;
-  tlm::tlm_generic_payload* request_in_progress;
-  sc_event end_request_event;
-  tlm_utils::peq_with_cb_and_phase<Initiator> m_peq;
 };
 
-
-// **************************************************************************************
-// Target module able to handle two pipelined transactions
-// **************************************************************************************
-
-DECLARE_EXTENDED_PHASE(internal_ph);
-
+/*
+  Target
+ */
 struct Target: sc_module
 {
   sc_out<sc_uint<BUS_WIDTH> > incoming_buffer;
   sc_in<sc_uint<ADDRESS_WIDTH> > module_address;
   sc_out<sc_uint<ADDRESS_WIDTH> > destination_address;
   sc_out<bool > transfer_package;
-  sc_out<bool > new_package;
+  sc_out<bool > command;
+  sc_event new_package;
 
-  // TLM-2 socket, defaults to 32-bits wide, base protocol
   tlm_utils::simple_target_socket<Target> socket;
 
   SC_CTOR(Target)
   : socket("socket")
-  , n_trans(0)
-  , response_in_progress(false)
-  , next_response_pending(0)
-  , end_req_pending(0)
-  , m_peq(this, &Target::peq_cb)
   {
-    // Register callbacks for incoming interface method calls
-    socket.register_nb_transport_fw(this, &Target::nb_transport_fw);
+    socket.register_b_transport(this, &Target::b_transport);
   }
 
-  // TLM-2 non-blocking transport method
-
-  virtual tlm::tlm_sync_enum nb_transport_fw( tlm::tlm_generic_payload& trans,
-                                              tlm::tlm_phase& phase, sc_time& delay )
+  virtual void b_transport( tlm::tlm_generic_payload& trans, sc_time& delay )
   {
-    sc_dt::uint64    adr = trans.get_address();
-    unsigned int     len = trans.get_data_length();
-    unsigned char*   byt = trans.get_byte_enable_ptr();
-    unsigned int     wid = trans.get_streaming_width();
+    tlm::tlm_command tlm_cmd = trans.get_command();
+    sc_uint<ADDRESS_WIDTH> adr = trans.get_address();
+    unsigned char* ptr = trans.get_data_ptr();
+    unsigned int len = trans.get_data_length();
+    unsigned char* byt = trans.get_byte_enable_ptr();
+    unsigned int wid = trans.get_streaming_width();
 
-    // Obliged to check the transaction attributes for unsupported features
-    // and to generate the appropriate error response
-    if (byt != 0) {
-      trans.set_response_status( tlm::TLM_BYTE_ENABLE_ERROR_RESPONSE );
-      return tlm::TLM_COMPLETED;
-    }
-    if (len > 4 || wid < len) {
-      trans.set_response_status( tlm::TLM_BURST_ERROR_RESPONSE );
-      return tlm::TLM_COMPLETED;
-    }
+    /* Check */
+    if (byt != 0 || len > 4 || wid < len)
+      SC_REPORT_ERROR("TLM-2", "Target does not support given generic payload transaction");
 
-    // Now queue the transaction until the annotated time has elapsed
-    m_peq.notify( trans, phase, delay);
-    return tlm::TLM_ACCEPTED;
+    /* Write back */
+    incoming_buffer.write(*reinterpret_cast<int*>(ptr));
+    destination_address.write(adr);
+    transfer_package.write(adr != module_address.read());
+    command = (tlm_cmd == tlm::TLM_WRITE_COMMAND); /* Write = 1 */
+
+    /* Alert about new package */
+    new_package.notify();
+    free(ptr);
+
+    /* Complete */
+    trans.set_response_status( tlm::TLM_OK_RESPONSE );
+
+    /* FIXME */
+    /* trans->release(); */
   }
-
-  bool last_state = 0;
-
-  void peq_cb(tlm::tlm_generic_payload& trans, const tlm::tlm_phase& phase)
-  {
-    tlm::tlm_sync_enum status;
-    sc_time delay;
-
-    switch (phase) {
-    case tlm::BEGIN_REQ:
-
-      #ifdef DEBUG
-        cout << name () <<" " <<hex << trans.get_address() << " BEGIN_REQ at " << sc_time_stamp() << endl;
-      #endif
-
-      // Increment the transaction reference count
-      trans.acquire();
-
-      // Put back-pressure on initiator by deferring END_REQ until pipeline is clear
-      if (n_trans == 10)
-        end_req_pending = &trans;
-      else
-      {
-        status = send_end_req(trans);
-        if (status == tlm::TLM_COMPLETED) // It is questionable whether this is valid
-          break;
-      }
-
-      break;
-
-    case tlm::END_RESP:
-      // On receiving END_RESP, the target can release the transaction
-      // and allow other pending transactions to proceed
-
-      #ifdef DEBUG
-        cout << name() << " " << hex << trans.get_address() << " END_RESP at " << sc_time_stamp() << endl;
-      #endif
-
-      if (!response_in_progress)
-        SC_REPORT_FATAL("TLM-2", "Illegal transaction phase END_RESP received by target");
-
-      trans.release();
-      n_trans--;
-
-      // Target itself is now clear to issue the next BEGIN_RESP
-      response_in_progress = false;
-      if (next_response_pending)
-      {
-        send_response( *next_response_pending );
-        next_response_pending = 0;
-      }
-
-      // ... and to unblock the initiator by issuing END_REQ
-      if (end_req_pending)
-      {
-        status = send_end_req( *end_req_pending );
-        end_req_pending = 0;
-      }
-
-      break;
-
-    case tlm::END_REQ:
-    case tlm::BEGIN_RESP:
-      SC_REPORT_FATAL("TLM-2", "Illegal transaction phase received by target");
-      break;
-
-    default:
-    
-      if (phase == internal_ph)
-      {
-        // Execute the read or write commands
-
-        tlm::tlm_command cmd = trans.get_command();
-        sc_dt::uint64    adr = trans.get_address();
-        unsigned char*   ptr = trans.get_data_ptr();
-        unsigned int     len = trans.get_data_length();
-
-        incoming_buffer.write(*reinterpret_cast<int*>(ptr));
-        free(ptr);
-        destination_address.write(adr);
-        transfer_package.write(adr != module_address.read());
-
-        /* Alert about new package */
-        new_package.write(!last_state);
-        last_state = !last_state;
-
-        /* 
-        cout << name() << " " << hex << adr << " Execute WRITE, data = " << *reinterpret_cast<int*>(ptr) << endl;
-        */
-
-        trans.set_response_status( tlm::TLM_OK_RESPONSE );
-
-        // Target must honor BEGIN_RESP/END_RESP exclusion rule
-        // i.e. must not send BEGIN_RESP until receiving previous END_RESP or BEGIN_REQ
-        if (response_in_progress)
-        {
-          // Target allows only two transactions in-flight
-          if (next_response_pending)
-            SC_REPORT_FATAL("TLM-2", "Attempt to have two pending responses in target");
-          next_response_pending = &trans;
-        }
-        else
-          send_response(trans);
-        break;
-      }
-    }
-  }
-
-  tlm::tlm_sync_enum send_end_req(tlm::tlm_generic_payload& trans)
-  {
-    tlm::tlm_sync_enum status;
-    tlm::tlm_phase bw_phase;
-    tlm::tlm_phase int_phase = internal_ph;
-    sc_time delay;
-
-    // Queue the acceptance and the response with the appropriate latency
-    bw_phase = tlm::END_REQ;
-    delay = sc_time(rand_ps(), SC_PS); // Accept delay
-    status = socket->nb_transport_bw( trans, bw_phase, delay );
-    if (status == tlm::TLM_COMPLETED)
-    {
-      // Transaction aborted by the initiator
-      // (TLM_UPDATED cannot occur at this point in the base protocol, so need not be checked)
-      trans.release();
-      return status;
-    }
-
-    // Queue internal event to mark beginning of response
-    delay = delay + sc_time(rand_ps(), SC_PS); // Latency
-    m_peq.notify( trans, int_phase, delay );
-    n_trans++;
-
-    return status;
-  }
-
-  void send_response(tlm::tlm_generic_payload& trans)
-  {
-    tlm::tlm_sync_enum status;
-    tlm::tlm_phase bw_phase;
-    sc_time delay;
-
-    response_in_progress = true;
-    bw_phase = tlm::BEGIN_RESP;
-    delay = SC_ZERO_TIME;
-    status = socket->nb_transport_bw( trans, bw_phase, delay );
-
-    if (status == tlm::TLM_UPDATED)
-    {
-      // The timing annotation must be honored
-      m_peq.notify( trans, bw_phase, delay);
-    }
-    else if (status == tlm::TLM_COMPLETED)
-    {
-      // The initiator has terminated the transaction
-      trans.release();
-      n_trans--;
-      response_in_progress = false;
-    }
-  }
-
-  int   n_trans;
-  bool  response_in_progress;
-  tlm::tlm_generic_payload*  next_response_pending;
-  tlm::tlm_generic_payload*  end_req_pending;
-  tlm_utils::peq_with_cb_and_phase<Target> m_peq;
 };
 
 
