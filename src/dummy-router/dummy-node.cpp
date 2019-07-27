@@ -27,7 +27,7 @@ SC_MODULE(Node)
 
   void thread_process(){
 
-    /* Put your tasks here */
+    /* FIXME - Put your tasks here */
     target->module_address = addr;
     for(int i = 0; i < NODES; i++){
       wait(sc_time(BUS_DELAY, SC_NS));
@@ -40,9 +40,7 @@ SC_MODULE(Node)
     while(true) {
 
 
-      /* Put your reception logic here */
-
-
+      /* FIXME - Put your reception logic here */
       wait(*(incoming_notification));
       bool transfer_next = target->transfer_package;
       bool command = target->command;

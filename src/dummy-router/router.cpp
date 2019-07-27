@@ -4,7 +4,7 @@
 
 #include "communication.hpp"
 
-/* Include your nodes below */
+/* FIXME - Include your nodes below */
 #include "dummy-node.cpp"
 
 #define NODES 5
@@ -16,7 +16,7 @@ SC_MODULE(Router)
   Target    *target_node;
   Target    *target_ring;
 
-  Node      *dummy_node;
+  Node      *node;
 
   int addr;
 
@@ -30,7 +30,6 @@ SC_MODULE(Router)
     initiator_ring = new Initiator("initiator_ring");
     target_node    = new Target   ("target_node");
     target_ring    = new Target   ("target_ring");
-    dummy_node     = new Node     ("dummy_node");
 
     target_node->module_address = addr;
     target_ring->module_address = addr;
@@ -39,11 +38,10 @@ SC_MODULE(Router)
     incoming_notification_ring = &(target_ring->new_package);
 
     /* Interconnect internals */
-    dummy_node->addr = 0; /* Node interconnected to router */
-    dummy_node->initiator->socket.bind(target_node->socket);
-    initiator_node->socket.bind(dummy_node->target->socket);
+    node->addr = 0; /* Node interconnected to router */
+    node->initiator->socket.bind(target_node->socket);
+    initiator_node->socket.bind(node->target->socket);
 
-    // SC_THREAD(thread_process); 
     SC_THREAD(reading_process_node);
     SC_THREAD(reading_process_ring);
 
@@ -103,11 +101,17 @@ int sc_main(int argc, char* argv[])
 
 
   /* Address assignment */
+  /* FIXME - Configure the router with your node HERE */
   node1.addr = 0;
+  node1.node = new Node("dummy_node");
   node2.addr = 1;
+  node2.node = new Node("dummy_node");
   node3.addr = 2;
+  node3.node = new Node("dummy_node");
   node4.addr = 3;
+  node4.node = new Node("dummy_node");
   node5.addr = 4;
+  node5.node = new Node("dummy_node");
 
   /* Binding - Ring */
   node1.initiator_ring->socket.bind(node2.target_ring->socket);
