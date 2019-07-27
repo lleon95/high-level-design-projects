@@ -81,9 +81,9 @@ SC_MODULE (vga_decoder)
         while(true) {
             wait(decode_pixel_event);
             if (((h_count >= ADDRESSABLE_VIDEO_H_START) &&
-                (h_count <= ADDRESSABLE_VIDEO_H_END))   && //Addressable horizontal
-                ((v_count >= ADDRESSABLE_VIDEO_V_START) && //Addressable vertical
-                (v_count <= ADDRESSABLE_VIDEO_H_START))) {
+                    (h_count <= ADDRESSABLE_VIDEO_H_END))   && //Addressable horizontal
+                    ((v_count >= ADDRESSABLE_VIDEO_V_START) && //Addressable vertical
+                     (v_count <= ADDRESSABLE_VIDEO_H_START))) {
                 sample_pixel_event.notify(SAMPLING_DELAY, SC_NS);
             }
         }
@@ -128,7 +128,7 @@ SC_MODULE (vga_decoder)
             wait(frame_start_interrupt_control_event);
             if(enable_interrupt) {
                 if (h_count == ADDRESSABLE_VIDEO_H_START &&
-                    v_count == ADDRESSABLE_VIDEO_V_START) {
+                        v_count == ADDRESSABLE_VIDEO_V_START) {
                     frame_start.write(1);
                     clear_interrupt_event.notify(INTERRUPT_TIME, SC_NS);
                 }

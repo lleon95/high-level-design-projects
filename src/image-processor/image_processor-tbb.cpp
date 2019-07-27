@@ -121,7 +121,6 @@ struct test_logger : sc_module {
         short* ptr_16_bits = reinterpret_cast<short*> (ptr);
         sc_uint<PIXEL_WIDTH> current_pixel = 0;
 
-
         if (byt != 0 || len > PACKAGE_LENGTH || wid < len) {
             SC_REPORT_ERROR("TLM-2",
                             "Target does not support given generic payload transaction");

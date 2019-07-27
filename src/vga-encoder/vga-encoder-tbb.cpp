@@ -51,23 +51,23 @@ sc_main (int argc, char* argv[])
     sc_trace(wf, blue_channel, "blue_channel");
 
     /* Initialise */
-    sc_start(0,SC_NS);
+    sc_start(0, SC_NS);
     video_out.reset();
-    cout << "@" << sc_time_stamp() <<" Starting simulation\n"<< endl;
+    cout << "@" << sc_time_stamp() << " Starting simulation\n" << endl;
 
     /* Print signals */
     uint64_t runtime = 0;
     int jump_time = RUNTIME_STEP;
     for (runtime = 0; runtime < RUNTIME; runtime += jump_time) {
         /* Simulation step */
-        sc_start(jump_time,SC_PS);
+        sc_start(jump_time, SC_PS);
         /* Logic */
         if(pixel_unqueue.read()) {
             jump_time = DELAY_SEND_PIXELS;
             pixel_in.write(pixel_compute ());
             video_out.write();
             video_out.read();
-            cout << "@" << sc_time_stamp() <<" Current pixel position: "
+            cout << "@" << sc_time_stamp() << " Current pixel position: "
                  << pixel_counter.read() + 1 << endl;
         } else {
             jump_time = RUNTIME_STEP;
@@ -75,7 +75,7 @@ sc_main (int argc, char* argv[])
     }
 
     /* Terminate */
-    cout << "@" << sc_time_stamp() <<" Terminating simulation\n" << endl;
+    cout << "@" << sc_time_stamp() << " Terminating simulation\n" << endl;
     sc_close_vcd_trace_file(wf);
     return 0;
 }
@@ -113,8 +113,8 @@ pixel_compute ()
     }
 
     pixel.range(CHANNEL_WIDTH - 1, 0) = blue;
-    pixel.range(2*CHANNEL_WIDTH - 1, CHANNEL_WIDTH) = green;
-    pixel.range(3*CHANNEL_WIDTH - 1, 2*CHANNEL_WIDTH) = red;
+    pixel.range(2 * CHANNEL_WIDTH - 1, CHANNEL_WIDTH) = green;
+    pixel.range(3 * CHANNEL_WIDTH - 1, 2 * CHANNEL_WIDTH) = red;
     return pixel;
 }
 

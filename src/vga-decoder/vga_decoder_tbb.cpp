@@ -46,14 +46,14 @@ sc_main (int argc, char* argv[])
     int row = 1;
 
     //Start the simulation
-    sc_start(0,SC_NS);
-    cout << "@" << sc_time_stamp()<< endl;
+    sc_start(0, SC_NS);
+    cout << "@" << sc_time_stamp() << endl;
 
     // Reset the inputs
     pixel_in = 0;
     hsync = 1;
     vsync = 1;
-    sc_start(1,SC_NS);
+    sc_start(1, SC_NS);
 
     for (double simulated_time = 0; simulated_time < SIMULATION_TIME;
             simulated_time += PIXEL_DELAY) {
@@ -78,10 +78,10 @@ sc_main (int argc, char* argv[])
 
         pixel_in.write(rand() % (1 << PIXEL_SIZE));
 
-        sc_start(PIXEL_DELAY,SC_NS);   // PIXEL_DELAY nano seconds elapsed
+        sc_start(PIXEL_DELAY, SC_NS);  // PIXEL_DELAY nano seconds elapsed
     }
 
-    cout << "@" << sc_time_stamp() <<" Terminating simulation\n" << endl;
+    cout << "@" << sc_time_stamp() << " Terminating simulation\n" << endl;
     sc_close_vcd_trace_file(wf);
     return 0;// Terminate simulation
 

@@ -48,9 +48,9 @@ sc_main (int argc, char* argv[])
         sc_trace(wf, ram._ramdata[addresses[i]], field_name);
     }
 
-    sc_start(0,SC_NS);
+    sc_start(0, SC_NS);
     cout << "@" << sc_time_stamp() << endl;
-    sc_start(DELAY,SC_NS);
+    sc_start(DELAY, SC_NS);
 
     /* Write all values */
     for(int i = 0; i < TEST_ITERATIONS; i++) {
@@ -59,9 +59,9 @@ sc_main (int argc, char* argv[])
 
         ram.write(address, data);
         printf("WR: addr = %x, data = %x\n", (int)address, (int)data);
-        sc_start(DELAY,SC_NS);
+        sc_start(DELAY, SC_NS);
     }
-    sc_start(DELAY,SC_NS);
+    sc_start(DELAY, SC_NS);
 
     printf("\n");
 
@@ -69,11 +69,11 @@ sc_main (int argc, char* argv[])
         address = addresses[i];
 
         data = ram.read(address);
-        sc_start(DELAY,SC_NS);
+        sc_start(DELAY, SC_NS);
         printf("Rd: addr = %x, data = %x\n", (int)address, (int) data);
     }
 
-    cout << "@" << sc_time_stamp() <<" Terminating simulation\n" << endl;
+    cout << "@" << sc_time_stamp() << " Terminating simulation\n" << endl;
     sc_close_vcd_trace_file(wf);
     return 0;
 }
