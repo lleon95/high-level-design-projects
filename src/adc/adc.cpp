@@ -14,13 +14,14 @@ adc::thread_process()
     // Control variables
     int column = 1;
     int row = 1;
-    short data = 0;
+    sc_uint<PACKAGE_LENGH_IN_BITS> data = 0;
 
     // Reset the inputs
     hsync = 1;
     vsync = 1;
-    data = rand() % (1 << PIXEL_SIZE);
-    data = (short) (vsync << V_SYNC_POS | hsync << H_SYNC_POS | data);
+    data = rand() % MAX_PIXEL_VALUE_PLUS_ONE;
+    data.range<12,12> = hsync;
+    data.range<13,13> = vsync;
     cout << "ADC: Sending 0x" << hex << data << " to " << DECODER_ADDRESS 
          << endl;
     initiator->write(DECODER_ADDRESS, (int)data, tlm::TLM_WRITE_COMMAND);
@@ -47,8 +48,9 @@ adc::thread_process()
             row = 1;
         }
 
-        data = rand() % (1 << PIXEL_SIZE);
-        data = (short) (vsync << V_SYNC_POS | hsync << H_SYNC_POS | data);
+        data = rand() % MAX_PIXEL_VALUE_PLUS_ONE;
+        data.range<12,12> = hsync;
+        data.range<13,13> = vsync;
         cout << "ADC: Sending 0x" << hex << data << " to " << DECODER_ADDRESS 
              << endl;
         initiator->write(DECODER_ADDRESS, (int)data, tlm::TLM_WRITE_COMMAND);

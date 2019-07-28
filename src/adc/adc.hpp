@@ -5,6 +5,8 @@
 
 #define RESOLUTION 640*480
 #define PIXEL_SIZE 12
+#define MAX_PIXEL_VALUE_PLUS_ONE (1 << PIXEL_SIZE)
+
 #define PIXEL_POS 0
 #define H_SYNC_POS 12
 #define V_SYNC_POS 13
@@ -24,6 +26,7 @@
 #define ADDRESSABLE_VIDEO_V_START 36
 #define ADDRESSABLE_VIDEO_V_END 515
 #define PACKAGE_LENGTH 2
+#define PACKAGE_LENGH_IN_BITS (PACKAGE_LENGTH * 8)
 #define TRANSACTION_DELAY 10 //Nano seconds
 
 // Needed for the simple_target_socket

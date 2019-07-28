@@ -16,7 +16,7 @@ struct DummySender : public Node {
         int pixel;
         for (int i = 0; i < TRANSACTIONS_TO_SEND; i++) {
             wait(sc_time(BUS_DELAY, SC_NS));
-            pixel = rand() % (1 << PIXEL_SIZE);
+            pixel = rand() % MAX_PIXEL_VALUE_PLUS_ONE;
             initiator->write(ADC_ADDRESS, pixel, tlm::TLM_WRITE_COMMAND);
         }
     }
