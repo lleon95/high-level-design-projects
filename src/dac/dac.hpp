@@ -12,11 +12,11 @@
 /* Signals width */
 #define PIXEL_WIDTH 12
 #define CHANNEL_WIDTH 4
+#define PACKAGE_LENGTH 2 /* 16 bits package length */
 
 struct dac : sc_module
 {
-    tlm_utils::simple_target_socket<vga_encoder> target_socket;
-    tlm_utils::simple_initiator_socket<vga_encoder> initiator_socket;
+    tlm_utils::simple_target_socket<dac> target_socket;
 
     /* I/O */
     sc_out<sc_uint<CHANNEL_WIDTH> > red_channel;
@@ -32,7 +32,7 @@ struct dac : sc_module
 
         SC_THREAD(put_rgb_signal);
 
-        target_socket.register_b_transport(this, &vga_encoder::b_transport);
+        target_socket.register_b_transport(this, &dac::b_transport);
     }
 
     /* Datapath */
