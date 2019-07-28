@@ -1,7 +1,9 @@
 #include "vga-encoder.hpp"
 
 /* Control stage */
-void vga_encoder::FSM_Emulator() {
+void
+vga_encoder::FSM_Emulator()
+{
     while(true) {
         wait(next_state_t);
         state = next_state;
@@ -10,8 +12,9 @@ void vga_encoder::FSM_Emulator() {
     }
 }
 
-void 
-vga_encoder::FSM_next_state() {
+void
+vga_encoder::FSM_next_state()
+{
     switch (state) {
     case FSM_VSYNC:
         next_state = FSM_V_BACK_PORCH;
@@ -48,8 +51,9 @@ vga_encoder::FSM_next_state() {
     }
 }
 
-void 
-vga_encoder::FSM_output_logic() {
+void
+vga_encoder::FSM_output_logic()
+{
     switch (state) {
     case FSM_VSYNC:
         v_sync.write(0);
@@ -95,18 +99,24 @@ vga_encoder::FSM_output_logic() {
 }
 
 /* Input ports */
-void vga_encoder::reset() {
+void
+vga_encoder::reset()
+{
     col = 0;
     row = 0;
     next_state = FSM_VSYNC;
     next_state_t.notify(READ_DELAY, SC_NS);
 }
-    
+
 /* Output port - Status */
-void vga_encoder::read() {
+void
+vga_encoder::read()
+{
     rd_t.notify(READ_DELAY, SC_NS);
 }
-void vga_encoder::rd() {
+void
+vga_encoder::rd()
+{
     while(true) {
         wait(rd_t);
         pixel_counter.write(COLS * row + col);
@@ -114,7 +124,9 @@ void vga_encoder::rd() {
 }
 
 /* Datapath */
-void vga_encoder::send_pixel() {
+void
+vga_encoder::send_pixel()
+{
     /* Enqueue next pixel */
     pixel_out = pixels_queue.front();
     pixels_queue.pop();
@@ -123,7 +135,8 @@ void vga_encoder::send_pixel() {
 }
 
 /* TLM implementation */
-void vga_encoder::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
+void
+vga_encoder::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
 {
     tlm::tlm_command cmd = trans.get_command();
     unsigned char*   ptr = trans.get_data_ptr();
@@ -136,14 +149,14 @@ void vga_encoder::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
 
     if (byt != 0 || len > PACKAGE_LENGTH || wid < len) {
         SC_REPORT_ERROR("TLM-2",
-            "Target does not support given generic payload transaction");
+                        "Target does not support given generic payload transaction");
     }
 
     /* Processor only accepts write operations */
     if ( cmd == tlm::TLM_WRITE_COMMAND ) {
         /* Copy pixels to internal buffer */
-        unsigned short pixel_in = *(ptr_16_bits) & 0xFFF; 
-        
+        unsigned short pixel_in = *(ptr_16_bits) & 0xFFF;
+
         /* Write pixels into queue */
         pixels_queue.push(pixel_in);
 
@@ -151,7 +164,8 @@ void vga_encoder::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
     }
 }
 
-void vga_encoder::put_rgb_signal()
+void
+vga_encoder::put_rgb_signal()
 {
     tlm::tlm_generic_payload trans;
 

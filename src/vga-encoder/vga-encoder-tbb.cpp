@@ -116,7 +116,7 @@ sc_main (int argc, char* argv[])
     sc_start(0, SC_NS);
     video_out.reset();
     cout << "@" << sc_time_stamp() << " Starting simulation\n" << endl;
-    
+
 
     /* Print signals */
     uint64_t runtime = 0;
