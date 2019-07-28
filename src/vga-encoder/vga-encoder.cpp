@@ -1,11 +1,15 @@
 #include "systemc.h"
 
+#include "tlm.h"
+#include "tlm_utils/simple_initiator_socket.h"
+#include "tlm_utils/simple_target_socket.h"
+
 #include "vga-encoder.hpp"
 
 SC_MODULE (vga_encoder)
 {
-    tlm_utils::simple_target_socket<image_processor> target_socket;
-    tlm_utils::simple_initiator_socket<image_processor> initiator_socket;
+    tlm_utils::simple_target_socket<vga_encoder> target_socket;
+    tlm_utils::simple_initiator_socket<vga_encoder> initiator_socket;
 
     sc_uint<12> pixel_in;
     sc_uint<12> pixel_out;
@@ -159,9 +163,6 @@ SC_MODULE (vga_encoder)
     }
 
     /* TLM implementation */
-    virtual void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay);
-    target_socket.register_b_transport(this, &b_transport);
-
     void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
     {
         tlm::tlm_command cmd = trans.get_command();
@@ -200,9 +201,7 @@ SC_MODULE (vga_encoder)
         int* return_pixel = new int;
         sc_time delay = sc_time(INTERRUPT_DELAY, SC_NS);
 
-        *(return_pixel) = pixel_out;
-
-        *return_pixel = (int)current_pixel;
+        *(return_pixel) = (int)pixel_out;
         trans.set_address( DESTINATION_ADDRESS );
         trans.set_command( tlm::TLM_WRITE_COMMAND );
         trans.set_data_ptr( reinterpret_cast<unsigned char*>(return_pixel) );

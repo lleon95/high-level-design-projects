@@ -29,6 +29,8 @@
   #define INTERRUPT_DELAY 5
 
   #define NUMBER_CHANNELS_BITS 3
+  #define PACKAGE_LENGTH 2 /* 16 bits package length */
+  #define PIXEL_WIDTH 12
   
   #define DESTINATION_ADDRESS 0x05
 
