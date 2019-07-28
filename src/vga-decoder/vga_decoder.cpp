@@ -62,37 +62,6 @@ vga_decoder::row_count()
 }
 
 void
-vga_decoder::update_output()
-{
-    while(true) {
-        wait(update_output_event);
-
-        // TLM-2 generic payload transaction, reused across calls to b_transport
-        tlm::tlm_generic_payload* trans = new tlm::tlm_generic_payload;
-        sc_time delay = sc_time(TRANSACTION_DELAY, SC_NS);
-        // Initialize 8 out of the 10 attributes, byte_enable_length being unused
-        trans->set_command(tlm::TLM_WRITE_COMMAND);
-        trans->set_address(i);  //2 to send it to the processor
-        trans->set_data_ptr(reinterpret_cast<unsigned char*>(&pixel));
-        trans->set_data_length(2);
-        trans->set_streaming_width(2); // = data_length to indicate no streaming
-        trans->set_byte_enable_ptr(0); // 0 indicates unused
-        trans->set_dmi_allowed(false); // Mandatory initial value
-        trans->set_response_status(
-            tlm::TLM_INCOMPLETE_RESPONSE); // Mandatory initial value
-
-        cout << "Decoder: Sending pixel " << dec
-             << h_count - ADDRESSABLE_VIDEO_H_START << ", " << dec
-             << v_count - ADDRESSABLE_VIDEO_V_START << ": 0x" << hex << pixel
-             << " to memory address 0x" << hex << i << " @ " << sc_time_stamp()
-             << endl;
-
-        initiator_socket->b_transport(*trans, delay);  // Blocking transport call
-        i++;
-    }
-}
-
-void
 vga_decoder::sample_pixel()
 {
     while(true) {
@@ -103,38 +72,44 @@ vga_decoder::sample_pixel()
 }
 
 void
-vga_decoder::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
+vga_decoder::thread_process()
 {
-    tlm::tlm_command cmd = trans.get_command();
-    unsigned char*   ptr = trans.get_data_ptr();
-    unsigned int     len = trans.get_data_length();
-    unsigned char*   byt = trans.get_byte_enable_ptr();
-    unsigned int     wid = trans.get_streaming_width();
-
-    if (byt != 0 || len > PACKAGE_LENGTH || wid < len) {
-        SC_REPORT_ERROR("TLM-2",
-                        "Target does not support given generic payload transaction");
+    while(true) {
+        wait(update_output_event);
+        cout << "Decoder: Sending pixel " << dec
+             << h_count - ADDRESSABLE_VIDEO_H_START << ", " << dec
+             << v_count - ADDRESSABLE_VIDEO_V_START << ": 0x" << hex << pixel
+             << " to memory address 0x" << hex << i << " @ " << sc_time_stamp()
+             << endl;
+        initiator->write(CPU_ADDRESS, (int)pixel, tlm::TLM_WRITE_COMMAND);
     }
-
-    if (cmd == tlm::TLM_WRITE_COMMAND) { //Check if this is a writting transaction.
-        short* ptr_pixel = reinterpret_cast<short*> (ptr);
-        short data = *ptr_pixel;
-        cout << "Decoder: Transaction received: 0x" << hex << data << " @ "
-             << sc_time_stamp() << endl;
-        pixel_in = GET_PIXEL(data);
-        current_h_sync = GET_H_SYNC(data);
-        current_v_sync = GET_V_SYNC(data);
-        if ((current_h_sync == 0) && (previous_h_sync == 1)) { //Falling egde in h sync
-            start_column_count();
-        }
-
-        if ((current_v_sync == 0) && (previous_v_sync == 1)) { //Falling egde in v sync
-            start_row_count();
-        }
-
-        previous_h_sync = current_h_sync;
-        previous_v_sync = current_v_sync;
-    }
-    trans.set_response_status(tlm::TLM_OK_RESPONSE);
 }
 
+void
+vga_decoder::reading_process()
+{
+    while(true) {
+        wait(*(incoming_notification));
+        tlm::tlm_command cmd = target->command;
+        unsigned short data = target->incomming_buffer;
+        wait(sc_time(BUS_DELAY, SC_NS));
+
+        if (cmd == tlm::TLM_WRITE_COMMAND) {
+            cout << "Decoder: Transaction received: 0x" << hex << data << " @ "
+                 << sc_time_stamp() << endl;
+            pixel_in = GET_PIXEL(data);
+            current_h_sync = GET_H_SYNC(data);
+            current_v_sync = GET_V_SYNC(data);
+            if ((current_h_sync == 0) && (previous_h_sync == 1)) { //Falling egde in h sync
+                start_column_count();
+            }
+
+            if ((current_v_sync == 0) && (previous_v_sync == 1)) { //Falling egde in v sync
+                start_row_count();
+            }
+
+            previous_h_sync = current_h_sync;
+            previous_v_sync = current_v_sync;
+        }
+    }
+}
