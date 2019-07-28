@@ -5,7 +5,16 @@
 #include <time.h>
 
 #include "image_processor.hpp"
+#include "router.hpp"
+
 #define TEST_ITERATIONS 10
+
+int random_pixel;
+int pixel_buffer[BUFFER_SIZE];
+int c_result;
+int sysc_result;
+double total_error = 0;
+sc_event _pixel_ready;
 
 /* Definition of Sobel filter in horizontal direction */
 const int h_weights[3][3] = {
@@ -60,19 +69,26 @@ gray_to_sobel(int pixels[3][3])
 
 
 static int
-process_pixel(int input_pixels, int pixel_buffer[], int index)
+process_pixel(int input_pixels, int pixel_buffer[], int pixel_index)
 {
 
     int pixel_window[3][3];
 
     /* Convert pixel to gray and save to buffer */
-    pixel_buffer[(index % BUFFER_SIZE)] = rgb12_to_gray( input_pixels );
+    pixel_buffer[(pixel_index % BUFFER_SIZE)] = rgb12_to_gray( input_pixels );
+
+    //printf("emma tbb: pixel_buffer[%d] = %x\n\n", (index % BUFFER_SIZE), (int)pixel_buffer[(index % BUFFER_SIZE)]);
 
     /* Copy pixels to window buffer */
     for (int i = 0; i < 3; i++) {
         for( int j = 0; j < 3; j++) {
-            pixel_window[i][j] = pixel_buffer[(index + (i - 1) * WIDTH + (j - 1)) %
-                                              BUFFER_SIZE];
+	  int index = (pixel_index + (i - 1) * WIDTH + (j - 1));
+	  if(index > 0 && index < BUFFER_SIZE){
+            pixel_window[i][j] = pixel_buffer[index];
+	  }
+	  else{
+	    pixel_window[i][j] = 0;
+	  }
         }
     }
 
@@ -80,85 +96,98 @@ process_pixel(int input_pixels, int pixel_buffer[], int index)
     return gray_to_sobel(pixel_window);
 }
 
-struct test_logger : sc_module {
-    tlm_utils::simple_target_socket<test_logger> target_socket;
-    tlm_utils::simple_initiator_socket<test_logger> initiator_socket;
-
-    int return_pixel;
+struct DummySender : public Node {
+    /* Initialization done by the parent class */
+    DummySender(const sc_module_name & name) : Node(name)
+    {
+    }
 
     void
-    pixel_send(int data)
+    thread_process()
     {
-        tlm::tlm_generic_payload trans;
-        /* Pointer to be passed to the target, target is resposible for freeing it */
-        int* return_pixel = new int;
-        sc_time delay = sc_time(INTERRUPT_DELAY, SC_NS);
+        int pixel_error;
+        for (int j = 0; j < 7; j++) {
+	  //for (int j = 0; j < HEIGHT; j++) {
+            for (int i = 0; i < WIDTH; i++) {
+                random_pixel = rand() % ( 1 << PIXEL_WIDTH );
 
-        *return_pixel = data;
+                wait(sc_time(BUS_DELAY, SC_NS));
 
-        trans.set_command( tlm::TLM_WRITE_COMMAND );
-        trans.set_data_ptr( reinterpret_cast<unsigned char*>(&data) );
-        trans.set_data_length( 2 );
-        trans.set_streaming_width( 2 ); /* = data_length to indicate no streaming */
-        trans.set_byte_enable_ptr( 0 ); /* 0 indicates unused */
-        trans.set_dmi_allowed( false ); /* Mandatory initial value */
-        trans.set_response_status(
-            tlm::TLM_INCOMPLETE_RESPONSE ); /* Mandatory initial value */
+                initiator->write(CPU_ADDRESS, random_pixel, tlm::TLM_WRITE_COMMAND);
 
-        initiator_socket->b_transport( trans, delay );  // Blocking transport call
+                /* Don't process another pixel until result can be tested */
+                wait(_pixel_ready);
+                c_result = process_pixel(random_pixel, pixel_buffer, (i + j * WIDTH) % BUFFER_SIZE);
+
+                pixel_error = abs(c_result - sysc_result);
+
+                total_error += pixel_error;
+		printf("error: %d\t", pixel_error);
+		printf("(%d, %d)\t", i, j);
+		printf("input_pixel: %x\t", random_pixel);
+		printf("systemC_output: %x\t", sysc_result);
+		printf("expected output: %x\n", c_result);
+
+            }
+        }
+        printf("Average Error: %f\n", total_error / (WIDTH * HEIGHT));
     }
 
-    /* Function to receive transfers  */
-    virtual void
-    b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
+    void
+    reading_process()
     {
-        tlm::tlm_command cmd = trans.get_command();
-        unsigned char*   ptr = trans.get_data_ptr();
-        unsigned int     len = trans.get_data_length();
-        unsigned char*   byt = trans.get_byte_enable_ptr();
-        unsigned int     wid = trans.get_streaming_width();
+        /* No reading operations are needed on the dummy sender */
+    }
+};
 
-        short* ptr_16_bits = reinterpret_cast<short*> (ptr);
-        sc_uint<PIXEL_WIDTH> current_pixel = 0;
-
-        if (byt != 0 || len > PACKAGE_LENGTH || wid < len) {
-            SC_REPORT_ERROR("TLM-2",
-                            "Target does not support given generic payload transaction");
-        }
-
-        /* Processor only accepts write operations */
-        if ( cmd == tlm::TLM_WRITE_COMMAND ) {
-            /* Copy pixels to internal buffer */
-            current_pixel = *ptr_16_bits & 0xFFF;
-            return_pixel = *ptr_16_bits & 0xFFF;
-        }
-
-        trans.set_response_status( tlm::TLM_OK_RESPONSE );
+struct DummyReceiver : public Node {
+    /* Initialization done by the parent class */
+    DummyReceiver(const sc_module_name & name) : Node(name)
+    {
     }
 
-    SC_CTOR(test_logger) : target_socket("target_socket")
+    void
+    thread_process()
     {
-        target_socket.register_b_transport(this, &test_logger::b_transport);
-    } /* End of Constructor */
+        /* No writing operations are needed on the dummy receiver */
+    }
 
-}; /* End of Module counter */
+    void
+    reading_process()
+    {
+        while(true) {
+            wait(*(incoming_notification));
+            bool command = target->command;
+            unsigned short data = target->incoming_buffer;
+            wait(sc_time(BUS_DELAY, SC_NS));
 
+            /* Transfer to the next */
+            if(command == tlm::TLM_WRITE_COMMAND) {
+                sysc_result = (int) data;
+                _pixel_ready.notify(INTERRUPT_DELAY, SC_NS);
+            }
+        }
+    }
+};
 
 int
 sc_main (int argc, char* argv[])
 {
-    int pixel_buffer[BUFFER_SIZE];
-    int random_pixel;
-
-    int i = 0;
-    double total_error = 0;
-
-    int c_result;
-    int sysc_result;
-
     /* Connect the DUT */
-    image_processor processor("SOBEL");
-    test_logger logger("test_logger");
+    Node* encoder = new DummySender("encoder");
+    encoder->addr = ENCODER_ADDRESS;
+    Node* cpu =  new image_processor("SOBEL"); //
+    cpu->addr = CPU_ADDRESS;
+    Node* decoder = new DummyReceiver("decoder");
+    decoder->addr = DECODER_ADDRESS;
+
+    Router encoder_router("router1", encoder);
+    Router cpu_router("router2", cpu);
+    Router decoder_router("router3", decoder);
+
+    encoder_router.initiator_ring->socket.bind(cpu_router.target_ring->socket);
+    cpu_router.initiator_ring->socket.bind(decoder_router.target_ring->socket);
+    decoder_router.initiator_ring->socket.bind(encoder_router.target_ring->socket);
 
     for(int i = 0; i < BUFFER_SIZE; i++) {
         pixel_buffer[i] = 0;
@@ -166,37 +195,9 @@ sc_main (int argc, char* argv[])
 
     srand (time(NULL));
 
-    logger.initiator_socket.bind(processor.target_socket);
-    processor.initiator_socket.bind(logger.target_socket);
-
-    sc_start(1, SC_NS);
-
-    /* Run test  */
-    for (i = 0; i <  BUFFER_SIZE; i++) {
-        sc_start(1, SC_NS);
-
-        random_pixel = rand() % ( 1 << PIXEL_WIDTH );
-
-        logger.pixel_send(random_pixel);
-
-
-        sc_start(1, SC_NS);
-
-        c_result = process_pixel(random_pixel, pixel_buffer, i);
-        sysc_result = (int) logger.return_pixel;
-
-        if(i > WIDTH) {
-            total_error += abs(sysc_result - c_result);
-            printf("error: %d\t", abs(sysc_result - c_result));
-            printf("%d\t", i);
-            printf("input pixel: %x\tsystemC output = %x\texpected output = %x\n\n",
-                   random_pixel, sysc_result, c_result );
-        }
-
-    }
+    sc_start();
 
     cout << "Average Error: " << total_error / BUFFER_SIZE << endl;
-
 
     cout << "@" << sc_time_stamp() << " Terminating simulation\n" << endl;
     return 0; /* Terminate simulation */
