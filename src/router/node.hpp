@@ -5,6 +5,8 @@
 
 #include "communication.hpp"
 
+#include "node_address.hpp"
+
 #define NODES 5
 
 SC_MODULE(Node)
@@ -33,3 +35,4 @@ SC_MODULE(Node)
 };
 
 #endif /* _NODE_HPP_ */
+

@@ -1,6 +1,7 @@
 
 #include "dummy-node.hpp"
 #include "router.hpp"
+#include "node_address.hpp"
 
 int
 sc_main(int argc, char* argv[])
@@ -11,11 +12,11 @@ sc_main(int argc, char* argv[])
     Node* node4 = new DummyNode("node4");
     Node* node5 = new DummyNode("node5");
 
-    node1->addr = 0;
-    node2->addr = 1;
-    node3->addr = 2;
-    node4->addr = 3;
-    node5->addr = 4;
+    node1->addr = ADC_ADDRESS;
+    node2->addr = DECODER_ADDRESS;
+    node3->addr = CPU_ADDRESS;
+    node4->addr = ENCODE_ADDRESS;
+    node5->addr = DAC_ADDRESS;
 
     Router router1("router1", node1);
     Router router2("router2", node2);
