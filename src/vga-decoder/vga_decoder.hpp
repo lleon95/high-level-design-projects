@@ -11,7 +11,7 @@ UNUSED | V SYNC | H SYNC |           PIXEL            |
 -------------------------------------------------------
 */
 
-#define RESOLUTION 640*480
+#define RESOLUTION (640*480)
 #define PIXEL_SIZE 12
 
 #define PIXEL_POS 0
@@ -24,7 +24,7 @@ UNUSED | V SYNC | H SYNC |           PIXEL            |
 #define PIXEL_DELAY  39.722  //This is in nano secs
 #define PIXELS_IN_ROW 800
 #define ROWS_IN_FRAME 525
-#define ROW_DELAY PIXEL_DELAY * PIXELS_IN_ROW // This is in nano secs
+#define ROW_DELAY (PIXEL_DELAY * PIXELS_IN_ROW) // This is in nano secs
 #define UPDATE_OUTPUT_DELAY 10 //nanoseconds
 #define SAMPLING_DELAY 10 //nanoseconds
 #define ADDRESSABLE_VIDEO_H_START 145
