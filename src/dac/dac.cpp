@@ -12,7 +12,6 @@ dac::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
 
     short* ptr_16_bits = reinterpret_cast<short*> (ptr);
 
-
     if (byt != 0 || len > PACKAGE_LENGTH || wid < len) {
         SC_REPORT_ERROR("TLM-2",
                         "Target does not support given generic payload transaction");

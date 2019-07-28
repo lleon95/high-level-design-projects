@@ -9,6 +9,7 @@
 #define RUNTIME 390000 /* 390ns */
 #define DELAY_SEND_PIXELS 39000 /* 39ns */
 #define INTERRUPT_DELAY 0
+#define MAX_PIXEL_OUTPUT 4096 /* 4096 = 1 << 12 */
 
 sc_uint<PIXEL_WIDTH> pixel_compute ();
 
@@ -79,7 +80,6 @@ sc_main (int argc, char* argv[])
     sc_start(0, SC_NS);
     cout << "@" << sc_time_stamp() << " Starting simulation\n" << endl;
 
-
     /* Print signals */
     uint64_t runtime = 0;
     for (runtime = 0; runtime < RUNTIME; runtime += DELAY_SEND_PIXELS) {
@@ -103,7 +103,7 @@ sc_uint<PIXEL_WIDTH>
 pixel_compute ()
 {
     sc_uint<PIXEL_WIDTH> pixel;
-    pixel = rand() % 4096; /* 4096 = 1 << 12 */
+    pixel = rand() % MAX_PIXEL_OUTPUT; 
     return pixel;
 }
 
