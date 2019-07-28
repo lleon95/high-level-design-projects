@@ -8,10 +8,11 @@
 #define V_SYNC_SYNCH_PULSE_LENGHT 2  //In rows
 
 struct adc_simulator : sc_module {
-    
+
     tlm_utils::simple_initiator_socket<adc_simulator> initiator_socket;
 
-    void send_data(short data)
+    void
+    send_data(short data)
     {
         tlm::tlm_generic_payload trans;
         sc_time delay = sc_time(TRANSACTION_DELAY, SC_NS);
@@ -25,15 +26,15 @@ struct adc_simulator : sc_module {
         trans.set_response_status(
             tlm::TLM_INCOMPLETE_RESPONSE ); /* Mandatory initial value */
         cout << "ADC: Sending package: 0x" << hex << data << " @ "
-        << sc_time_stamp() << endl;
+             << sc_time_stamp() << endl;
         initiator_socket->b_transport(trans, delay);  // Blocking transport call
     }
 
-    SC_CTOR(adc_simulator) : initiator_socket("initiator_socket"){} /* End of Constructor */
+    SC_CTOR(adc_simulator) :
+        initiator_socket("initiator_socket") {} /* End of Constructor */
 }; /* End of Module adc_simulator */
 
-struct Memory: sc_module
-{
+struct Memory: sc_module {
     // TLM-2 socket, defaults to 32-bits wide, base protocol
     tlm_utils::simple_target_socket<Memory> target_socket;
 
@@ -45,12 +46,14 @@ struct Memory: sc_module
         target_socket.register_b_transport(this, &Memory::b_transport);
 
         // Initialize memory with random data
-        for (int i = 0; i < SIZE; i++)
+        for (int i = 0; i < SIZE; i++) {
             mem[i] = 0x0;
+        }
     }
 
     // TLM-2 blocking transport method
-    virtual void b_transport( tlm::tlm_generic_payload& trans, sc_time& delay )
+    virtual void
+    b_transport( tlm::tlm_generic_payload& trans, sc_time& delay )
     {
         tlm::tlm_command cmd = trans.get_command();
         sc_dt::uint64    adr = trans.get_address();
@@ -64,16 +67,18 @@ struct Memory: sc_module
         // Can ignore DMI hint and extensions
         // Using the SystemC report handler is an acceptable way of signalling an error
 
-        if (adr >= sc_dt::uint64(SIZE) || byt != 0 || len > 4 || wid < len)
-            SC_REPORT_ERROR("TLM-2", "Target does not support given generic payload transaction");
+        if (adr >= sc_dt::uint64(SIZE) || byt != 0 || len > 4 || wid < len) {
+            SC_REPORT_ERROR("TLM-2",
+                            "Target does not support given generic payload transaction");
+        }
 
         // Obliged to implement read and write commands
-        if ( cmd == tlm::TLM_READ_COMMAND )
+        if ( cmd == tlm::TLM_READ_COMMAND ) {
             memcpy(ptr, &mem[adr], len);
-        else if ( cmd == tlm::TLM_WRITE_COMMAND ){
+        } else if ( cmd == tlm::TLM_WRITE_COMMAND ) {
             memcpy(&mem[adr], ptr, len);
             cout << "Memory: 0x" << hex << *ptr << " was written to 0x"
-            << hex << adr << " @ " << sc_time_stamp() << endl;
+                 << hex << adr << " @ " << sc_time_stamp() << endl;
         }
         // Obliged to set response status to indicate successful completion
         trans.set_response_status( tlm::TLM_OK_RESPONSE );
@@ -89,8 +94,7 @@ SC_MODULE(Top)
     vga_decoder   *decoder;
     Memory        *memory;
 
-    SC_CTOR(Top)
-    {
+    SC_CTOR(Top) {
         // Instantiate components
         adc     = new adc_simulator("ADC");
         decoder = new vga_decoder("vga_decoder");
@@ -153,7 +157,7 @@ sc_main (int argc, char* argv[])
         if (row == ROWS_IN_FRAME + 1) { //It's a new frame
             row = 1;
         }
-        
+
         data = rand() % (1 << PIXEL_SIZE);
         data = (short) (vsync << V_SYNC_POS | hsync << H_SYNC_POS | data);
         decoder.adc->send_data(data);
