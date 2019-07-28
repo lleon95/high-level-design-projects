@@ -1,6 +1,13 @@
 #ifndef VGA_ENCODER_HPP
 #define VGA_ENCODER_HPP
 
+  #include <queue>
+  
+  #include "systemc.h"
+  #include "tlm.h"
+  #include "tlm_utils/simple_initiator_socket.h"
+  #include "tlm_utils/simple_target_socket.h"
+
   /* VGA Constants */
   #define ROWS 480
   #define COLS 640
@@ -36,5 +43,63 @@
 
   #define WRITE_DELAY 10 /* 10ns */
   #define READ_DELAY 10 /* 10ns */
+
+struct vga_encoder : sc_module
+{
+    tlm_utils::simple_target_socket<vga_encoder> target_socket;
+    tlm_utils::simple_initiator_socket<vga_encoder> initiator_socket;
+
+    /* Pixels Queue */
+    std::queue<unsigned short> pixels_queue;
+
+    sc_uint<12> pixel_out;
+    sc_out<sc_uint<19> >  pixel_counter;
+
+    sc_out<bool >  h_sync;
+    sc_out<bool >  v_sync;
+
+    sc_uint<10>   col; /* 640 cols */
+    sc_uint<9>    row; /* 480 rows */
+    sc_uint<12> pixel;
+
+    sc_uint<3>  state = 0;
+    sc_uint<3>  next_state = 0;
+
+    sc_event wr_t, rd_t, next_state_t, write_pixel;
+
+    SC_HAS_PROCESS(vga_encoder);
+    vga_encoder(sc_module_name vga_encoder) {
+
+        SC_THREAD(FSM_Emulator);
+        /* Ports */
+        SC_THREAD(rd);
+
+        /* Socket */
+        target_socket.register_b_transport(this, &vga_encoder::b_transport);
+    }
+
+    /* Control stage */
+    void FSM_Emulator();
+
+    void FSM_next_state();
+
+    void FSM_output_logic();
+
+    /* Input ports */
+    void reset();
+    
+    /* Output port - Status */
+    void read();
+    void rd();
+
+    /* Datapath */
+    void send_pixel();
+
+    /* TLM implementation */
+    virtual void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay);
+
+    void put_rgb_signal();
+
+};
 #endif
 

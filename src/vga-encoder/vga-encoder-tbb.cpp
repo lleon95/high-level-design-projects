@@ -4,7 +4,7 @@
 #include "tlm_utils/simple_initiator_socket.h"
 #include "tlm_utils/simple_target_socket.h"
 
-#include "vga-encoder.cpp"
+#include "vga-encoder.hpp"
 
 #define RUNTIME 17000000000 /* 17ms */
 #define RUNTIME_STEP 10000 /* 10ns */
