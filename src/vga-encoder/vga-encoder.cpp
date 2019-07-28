@@ -4,16 +4,15 @@
 
 SC_MODULE (vga_encoder)
 {
+    tlm_utils::simple_target_socket<image_processor> target_socket;
+    tlm_utils::simple_initiator_socket<image_processor> initiator_socket;
 
-    sc_in<sc_uint<12> > pixel_in;
-    sc_out<bool >  pixel_unqueue;
+    sc_uint<12> pixel_in;
+    sc_uint<12> pixel_out;
     sc_out<sc_uint<19> >  pixel_counter;
 
     sc_out<bool >  h_sync;
     sc_out<bool >  v_sync;
-    sc_out<sc_uint<4> > red_channel;
-    sc_out<sc_uint<4> > green_channel;
-    sc_out<sc_uint<4> > blue_channel;
 
     sc_uint<10>   col; /* 640 cols */
     sc_uint<9>    row; /* 480 rows */
@@ -22,7 +21,7 @@ SC_MODULE (vga_encoder)
     sc_uint<3>  state = 0;
     sc_uint<3>  next_state = 0;
 
-    sc_event wr_t, rd_t, next_state_t;
+    sc_event wr_t, rd_t, next_state_t, write_pixel;
 
     SC_HAS_PROCESS(vga_encoder);
     vga_encoder(sc_module_name vga_encoder) {
@@ -84,47 +83,39 @@ SC_MODULE (vga_encoder)
         case FSM_VSYNC:
             v_sync.write(0);
             h_sync.write(1);
-            pixel_unqueue.write(0);
             col = 0;
             row = 0;
             next_state_t.notify(DELAY_VSYNC, SC_NS);
             break;
         case FSM_V_BACK_PORCH:
             v_sync.write(1);
-            pixel_unqueue.write(0);
             next_state_t.notify(DELAY_V_BACK_PORCH, SC_NS);
             break;
         case FSM_V_FRONT_PORCH:
             v_sync.write(1);
-            pixel_unqueue.write(0);
             next_state_t.notify(DELAY_V_FRONT_PORCH, SC_NS);
             break;
         case FSM_H_SYNC:
             h_sync.write(0);
-            pixel_unqueue.write(0);
             col = 0;
             next_state_t.notify(DELAY_H_SYNC, SC_NS);
             break;
         case FSM_H_BACK_PORCH:
             h_sync.write(1);
-            pixel_unqueue.write(0);
             next_state_t.notify(DELAY_H_BACK_PORCH, SC_NS);
             break;
         case FSM_H_FRONT_PORCH:
             h_sync.write(1);
-            pixel_unqueue.write(0);
             row++;
             next_state_t.notify(DELAY_H_FRONT_PORCH, SC_NS);
             break;
         case FSM_SEND_PIXELS:
             h_sync.write(1);
-            pixel_unqueue.write(1);
-            //send_pixel();
+            write_pixel.notify();
             col++;
             next_state_t.notify(DELAY_SEND_PIXELS, SC_PS);
             break;
         default:
-            pixel_unqueue.write(0);
             h_sync.write(1);
             v_sync.write(1);
             next_state_t.notify(DELAY_DEFAULT, SC_NS);
@@ -145,7 +136,7 @@ SC_MODULE (vga_encoder)
     void wr() {
         while(true) {
             wait(wr_t);
-            pixel = pixel_in.read();
+            pixel = pixel_in;
             send_pixel();
         }
     }
@@ -163,9 +154,66 @@ SC_MODULE (vga_encoder)
 
     /* Datapath */
     void send_pixel() {
-        red_channel.write(pixel(11, 8));
-        green_channel.write(pixel(7, 4));
-        blue_channel.write(pixel(3, 0));
+        pixel_out = pixel;
+        put_rgb_signal();
+    }
+
+    /* TLM implementation */
+    virtual void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay);
+    target_socket.register_b_transport(this, &b_transport);
+
+    void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
+    {
+        tlm::tlm_command cmd = trans.get_command();
+        unsigned char*   ptr = trans.get_data_ptr();
+        unsigned int     len = trans.get_data_length();
+        unsigned char*   byt = trans.get_byte_enable_ptr();
+        unsigned int     wid = trans.get_streaming_width();
+
+        short* ptr_16_bits = reinterpret_cast<short*> (ptr);
+
+
+        if (byt != 0 || len > PACKAGE_LENGTH || wid < len) {
+            SC_REPORT_ERROR("TLM-2",
+                "Target does not support given generic payload transaction");
+        }
+
+        /* Processor only accepts write operations */
+        if ( cmd == tlm::TLM_WRITE_COMMAND ) {
+            /* Copy pixels to internal buffer */
+            pixel_in = *(ptr_16_bits) & 0xFFF; 
+            
+            /* Wait for the next pixel write */
+            wait(write_pixel);
+
+            /* Write pixel */
+            write();
+            trans.set_response_status( tlm::TLM_OK_RESPONSE );
+        }
+    }
+
+    void put_rgb_signal()
+    {
+        tlm::tlm_generic_payload trans;
+
+        /* Pointer to be passed to the target, target is resposible for freeing it */
+        int* return_pixel = new int;
+        sc_time delay = sc_time(INTERRUPT_DELAY, SC_NS);
+
+        *(return_pixel) = pixel_out;
+
+        *return_pixel = (int)current_pixel;
+        trans.set_address( DESTINATION_ADDRESS );
+        trans.set_command( tlm::TLM_WRITE_COMMAND );
+        trans.set_data_ptr( reinterpret_cast<unsigned char*>(return_pixel) );
+        trans.set_data_length( 2 );
+        trans.set_streaming_width( 2 ); /* = data_length to indicate no streaming */
+        trans.set_byte_enable_ptr( 0 ); /* 0 indicates unused */
+        trans.set_dmi_allowed( false ); /* Mandatory initial value */
+        trans.set_response_status(
+            tlm::TLM_INCOMPLETE_RESPONSE ); /* Mandatory initial value */
+
+        initiator_socket->b_transport( trans, delay );  // Blocking transport call
     }
 
 };

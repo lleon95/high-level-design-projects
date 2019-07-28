@@ -26,8 +26,13 @@
   #define DELAY_H_FRONT_PORCH  940      /* 940ns    */
   #define DELAY_V_FRONT_PORCH  350000   /* 350us    */
   #define DELAY_DEFAULT 10
+  #define INTERRUPT_DELAY 5
 
-  #define WRITE_DELAY 20 /* 10ns */
+  #define NUMBER_CHANNELS_BITS 3
+  
+  #define DESTINATION_ADDRESS 0x05
+
+  #define WRITE_DELAY 10 /* 10ns */
   #define READ_DELAY 10 /* 10ns */
 #endif
 
