@@ -29,8 +29,7 @@
 // Needed for the simple_target_socket
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-struct vga_decoder : sc_module
-{
+struct vga_decoder : sc_module {
     // TLM-2 socket, defaults to 32-bits wide, base protocol
     tlm_utils::simple_initiator_socket<vga_decoder> initiator_socket;
     tlm_utils::simple_target_socket<vga_decoder> target_socket;
@@ -63,7 +62,8 @@ struct vga_decoder : sc_module
     // Function to receive transactions
     virtual void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay);
 
-    SC_CTOR(vga_decoder) : initiator_socket("socket") {
+    SC_CTOR(vga_decoder) : initiator_socket("socket")
+    {
 
         h_count  = 0;
         v_count  = 0;
