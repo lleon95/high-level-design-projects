@@ -103,10 +103,20 @@ sc_main (int argc, char* argv[])
     video_out.h_sync(h_sync);
     video_out.v_sync(v_sync);
 
+    /* Open VCD file */
+    sc_trace_file *wf = sc_create_vcd_trace_file("video_encoder");
+    /* Dump the desired signals */
+    sc_trace(wf, c_result, "pixel_in");
+    sc_trace(wf, sysc_result, "pixel_out");
+    sc_trace(wf, pixel_counter, "pixel_counter");
+    sc_trace(wf, h_sync, "h_sync");
+    sc_trace(wf, v_sync, "v_sync");
+
     /* Initialise */
     sc_start(0, SC_NS);
     video_out.reset();
     cout << "@" << sc_time_stamp() << " Starting simulation\n" << endl;
+    
 
     /* Print signals */
     uint64_t runtime = 0;
@@ -118,15 +128,6 @@ sc_main (int argc, char* argv[])
         logger.pixel_send(c_result);
         sysc_result = (int) logger.return_pixel;
     }
-
-    /* Open VCD file */
-    sc_trace_file *wf = sc_create_vcd_trace_file("video_encoder");
-    /* Dump the desired signals */
-    sc_trace(wf, c_result, "pixel_in");
-    sc_trace(wf, sysc_result, "pixel_out");
-    sc_trace(wf, pixel_counter, "pixel_counter");
-    sc_trace(wf, h_sync, "h_sync");
-    sc_trace(wf, v_sync, "v_sync");
 
     /* Terminate */
     cout << "@" << sc_time_stamp() << " Terminating simulation\n" << endl;

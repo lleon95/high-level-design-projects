@@ -1,5 +1,6 @@
-#include "systemc.h"
+#include <queue>
 
+#include "systemc.h"
 #include "tlm.h"
 #include "tlm_utils/simple_initiator_socket.h"
 #include "tlm_utils/simple_target_socket.h"
@@ -11,7 +12,9 @@ SC_MODULE (vga_encoder)
     tlm_utils::simple_target_socket<vga_encoder> target_socket;
     tlm_utils::simple_initiator_socket<vga_encoder> initiator_socket;
 
-    sc_uint<12> pixel_in;
+    /* Pixels Queue */
+    std::queue<unsigned short> pixels_queue;
+
     sc_uint<12> pixel_out;
     sc_out<sc_uint<19> >  pixel_counter;
 
@@ -29,10 +32,13 @@ SC_MODULE (vga_encoder)
 
     SC_HAS_PROCESS(vga_encoder);
     vga_encoder(sc_module_name vga_encoder) {
+
         SC_THREAD(FSM_Emulator);
         /* Ports */
-        SC_THREAD(wr);
         SC_THREAD(rd);
+
+        /* Socket */
+        target_socket.register_b_transport(this, &vga_encoder::b_transport);
     }
 
     /* Control stage */
@@ -115,7 +121,7 @@ SC_MODULE (vga_encoder)
             break;
         case FSM_SEND_PIXELS:
             h_sync.write(1);
-            write_pixel.notify();
+            send_pixel();
             col++;
             next_state_t.notify(DELAY_SEND_PIXELS, SC_PS);
             break;
@@ -134,17 +140,7 @@ SC_MODULE (vga_encoder)
         next_state = FSM_VSYNC;
         next_state_t.notify(READ_DELAY, SC_NS);
     }
-    void write() {
-        wr_t.notify(WRITE_DELAY, SC_NS);
-    }
-    void wr() {
-        while(true) {
-            wait(wr_t);
-            pixel = pixel_in;
-            send_pixel();
-        }
-    }
-
+    
     /* Output port - Status */
     void read() {
         rd_t.notify(READ_DELAY, SC_NS);
@@ -158,12 +154,15 @@ SC_MODULE (vga_encoder)
 
     /* Datapath */
     void send_pixel() {
-        pixel_out = pixel;
+        /* Enqueue next pixel */
+        pixel_out = pixels_queue.front();
+        pixels_queue.pop();
+        /* Write to output */
         put_rgb_signal();
     }
 
     /* TLM implementation */
-    void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
+    virtual void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
     {
         tlm::tlm_command cmd = trans.get_command();
         unsigned char*   ptr = trans.get_data_ptr();
@@ -182,13 +181,11 @@ SC_MODULE (vga_encoder)
         /* Processor only accepts write operations */
         if ( cmd == tlm::TLM_WRITE_COMMAND ) {
             /* Copy pixels to internal buffer */
-            pixel_in = *(ptr_16_bits) & 0xFFF; 
+            unsigned short pixel_in = *(ptr_16_bits) & 0xFFF; 
             
-            /* Wait for the next pixel write */
-            wait(write_pixel);
+            /* Write pixels into queue */
+            pixels_queue.push(pixel_in);
 
-            /* Write pixel */
-            write();
             trans.set_response_status( tlm::TLM_OK_RESPONSE );
         }
     }
@@ -198,7 +195,7 @@ SC_MODULE (vga_encoder)
         tlm::tlm_generic_payload trans;
 
         /* Pointer to be passed to the target, target is resposible for freeing it */
-        int* return_pixel = new int;
+        int * return_pixel = new int;
         sc_time delay = sc_time(INTERRUPT_DELAY, SC_NS);
 
         *(return_pixel) = (int)pixel_out;
