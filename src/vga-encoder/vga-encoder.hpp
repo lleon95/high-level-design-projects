@@ -5,8 +5,7 @@
 
 #include "systemc.h"
 #include "tlm.h"
-#include "tlm_utils/simple_initiator_socket.h"
-#include "tlm_utils/simple_target_socket.h"
+#include "node.hpp"
 
 /* VGA Constants */
 #define ROWS 480
@@ -39,16 +38,10 @@
 #define PACKAGE_LENGTH 2 /* 16 bits package length */
 #define PIXEL_WIDTH 12
 
-#define DESTINATION_ADDRESS 0x05
-
-#define WRITE_DELAY 10 /* 10ns */
 #define READ_DELAY 10 /* 10ns */
 
-struct vga_encoder : sc_module
+struct vga_encoder : Node
 {
-    tlm_utils::simple_target_socket<vga_encoder> target_socket;
-    tlm_utils::simple_initiator_socket<vga_encoder> initiator_socket;
-
     /* Pixels Queue */
     std::queue<unsigned short> pixels_queue;
 
@@ -68,18 +61,13 @@ struct vga_encoder : sc_module
     sc_event wr_t, rd_t, next_state_t, write_pixel;
 
     SC_HAS_PROCESS(vga_encoder);
-    vga_encoder(sc_module_name vga_encoder) {
 
-        SC_THREAD(FSM_Emulator);
-        /* Ports */
-        SC_THREAD(rd);
+    vga_encoder(const sc_module_name & name) : Node(name) {
 
-        /* Socket */
-        target_socket.register_b_transport(this, &vga_encoder::b_transport);
-    }
+	}
 
     /* Control stage */
-    void FSM_Emulator();
+    void thread_process();
 
     void FSM_next_state();
 
@@ -87,16 +75,9 @@ struct vga_encoder : sc_module
 
     /* Input ports */
     void reset();
-    
-    /* Output port - Status */
-    void read();
-    void rd();
 
     /* Datapath */
     void send_pixel();
-
-    /* TLM implementation */
-    virtual void b_transport(tlm::tlm_generic_payload& trans, sc_time& delay);
 
     void put_rgb_signal();
 

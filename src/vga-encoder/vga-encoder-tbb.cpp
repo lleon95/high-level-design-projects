@@ -80,9 +80,6 @@ struct test_logger : sc_module {
 int
 sc_main (int argc, char* argv[])
 {
-    /* Module in/control */
-    sc_signal<sc_uint<19> >  pixel_counter;
-
     /* Module out */
     sc_signal<bool>  h_sync;
     sc_signal<bool>  v_sync;
@@ -96,9 +93,6 @@ sc_main (int argc, char* argv[])
     logger.initiator_socket.bind(video_out.target_socket);
     video_out.initiator_socket.bind(logger.target_socket);
 
-    /* Input/Control */
-    video_out.pixel_counter(pixel_counter);
-
     /* Output */
     video_out.h_sync(h_sync);
     video_out.v_sync(v_sync);
@@ -108,7 +102,6 @@ sc_main (int argc, char* argv[])
     /* Dump the desired signals */
     sc_trace(wf, c_result, "pixel_in");
     sc_trace(wf, sysc_result, "pixel_out");
-    sc_trace(wf, pixel_counter, "pixel_counter");
     sc_trace(wf, h_sync, "h_sync");
     sc_trace(wf, v_sync, "v_sync");
 
