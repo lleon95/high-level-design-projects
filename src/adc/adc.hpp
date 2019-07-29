@@ -31,15 +31,10 @@
 
 #define DEBUG_PIXELS 5
 #define DEBUG_H_SYNC_SYNCH_PULSE_LENGTH 2
-// Needed for the simple_target_socket
-#define SC_INCLUDE_DYNAMIC_PROCESSES
-
-// ADC module generating generic payload transactions
 
 struct adc : Node {
     void thread_process();
     void reading_process();
-    SC_HAS_PROCESS(adc);
     adc(const sc_module_name & name) : Node(name)
     {
     } //End of constructor

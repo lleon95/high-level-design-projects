@@ -61,27 +61,26 @@ sc_main (int argc, char* argv[])
 {
     /* Connect the DUT */
     
-    Node* ADC =  new adc("ADC"); //
-    ADC->addr = ADC_ADDRESS;
-    Node* decoder = new DummyReceiver("decoder");
-    decoder->addr = DECODER_ADDRESS;
-    Node* encoder = new DummySender("encoder");
-    encoder->addr = ENCODER_ADDRESS;
+    Node* node_ADC =  new adc("ADC"); //
+    node_ADC->addr = ADC_ADDRESS;
+    Node* node_decoder = new DummyReceiver("decoder");
+    node_decoder->addr = DECODER_ADDRESS;
+    Node* node_encoder = new DummySender("encoder");
+    node_encoder->addr = ENCODER_ADDRESS;
 
-    Router encoder_router("router1", encoder);
-    Router adc_router("router2", ADC);
-    Router decoder_router("router3", decoder);
+    Router adc_router("router0", node_ADC);
+    Router decoder_router("router1", node_decoder);
+    Router encoder_router("router3", node_encoder);
 
     adc_router.initiator_ring->socket.bind(decoder_router.target_ring->socket);
     decoder_router.initiator_ring->socket.bind(encoder_router.target_ring->socket);
     encoder_router.initiator_ring->socket.bind(adc_router.target_ring->socket);
 
-    encoder_router.addr = ENCODER_ADDRESS;
     adc_router.addr = ADC_ADDRESS;
     decoder_router.addr = DECODER_ADDRESS;
+    encoder_router.addr = ENCODER_ADDRESS;
 
     sc_start();
-    sc_start(1, SC_US);
     cout << "@" << sc_time_stamp() << " Terminating simulation" << endl;
     return 0;
 }  //End of main

@@ -84,7 +84,7 @@ adc::reading_process()
         wait(*(incoming_notification));
         unsigned short data = target->incoming_buffer;
         //We shouldn't receive any transactions, but if we do ...
-        cout << "ADC: ERROR - Transaction received: 0x" << hex << data
+        cerr << "ADC: ERROR - Transaction received: 0x" << hex << data
              << " @ "<< sc_time_stamp() << endl;
     }
 }
