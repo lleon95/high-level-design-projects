@@ -95,11 +95,11 @@ sc_main (int argc, char* argv[])
     encoder->v_sync(v_sync);
 
     /* Connect the DUT */
-    Router cpu_router("router1", cpu);
+    Router cpu_router("cpu_router", cpu);
     cpu_router.addr = CPU_ADDRESS;
-    Router encoder_router("router2", encoder);
+    Router encoder_router("encoder_router", encoder);
     encoder_router.addr = ENCODER_ADDRESS;
-    Router dac_router("router3", dac);
+    Router dac_router("dac_router", dac);
     dac_router.addr = DAC_ADDRESS;
 
     cpu_router.initiator_ring->socket.bind(encoder_router.target_ring->socket);
