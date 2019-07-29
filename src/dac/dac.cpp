@@ -2,35 +2,24 @@
 
 /* Reception stage */
 void
-dac::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
+dac::reading_process()
 {
-    tlm::tlm_command cmd = trans.get_command();
-    unsigned char*   ptr = trans.get_data_ptr();
-    unsigned int     len = trans.get_data_length();
-    unsigned char*   byt = trans.get_byte_enable_ptr();
-    unsigned int     wid = trans.get_streaming_width();
+    while(true) {
+        wait(*(incoming_notification));
+        bool command = target->command;
+        unsigned short data = target->incoming_buffer;
+        wait(sc_time(BUS_DELAY, SC_NS));
 
-    short* ptr_16_bits = reinterpret_cast<short*> (ptr);
+        if(command == tlm::TLM_WRITE_COMMAND) {
+            pixel = (sc_uint<PIXEL_WIDTH>)(data & 0xFFF);
 
-    if (byt != 0 || len > PACKAGE_LENGTH || wid < len) {
-        SC_REPORT_ERROR("TLM-2",
-                        "Target does not support given generic payload transaction");
-    }
-
-    /* Processor only accepts write operations */
-    if ( cmd == tlm::TLM_WRITE_COMMAND ) {
-        /* Copy pixels to internal buffer */
-        pixel = (sc_uint<PIXEL_WIDTH>)(*(ptr_16_bits) & 0xFFF);
-
-        /* Write pixels into queue */
-        wr_t.notify(sc_time(WRITE_DELAY, SC_NS));
- 
-        trans.set_response_status( tlm::TLM_OK_RESPONSE );
+            wr_t.notify(sc_time(WRITE_DELAY, SC_NS));
+        }
     }
 }
 
 void
-dac::put_rgb_signal()
+dac::thread_process()
 {
     while(true) {
         wait(wr_t);
