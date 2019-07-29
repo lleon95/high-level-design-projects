@@ -4,7 +4,6 @@
 #include "router.hpp"
 
 #define RUNTIME 1700000000
-#define CHANNEL_WIDTH 4
 #define MAX_PIXEL_VALUE 4096
 
 #define COLOR_COL_WIDTH 20
@@ -15,7 +14,7 @@ sc_event _pixel_ready;
 sc_event _start_sim;
 sc_trace_file *wf = sc_create_vcd_trace_file("decoder");
 
-static sc_uint<12> pixel_compute ();
+static sc_uint<PIXEL_WIDTH> pixel_compute ();
 
 struct DummySender : public Node {
     /* Initialization done by the parent class */
@@ -123,16 +122,16 @@ sc_main (int argc, char* argv[])
 /*
  * This function computes a new pixel, emulating the image-processor module
  */
-static sc_uint<12>
+static sc_uint<PIXEL_WIDTH>
 pixel_compute ()
 {
-    sc_uint<12> pixel;
-    static sc_uint<10> col;
-    static sc_uint<9> row;
+    sc_uint<PIXEL_WIDTH> pixel;
+    static sc_uint<COLS_COUNTER_BITS> col;
+    static sc_uint<ROWS_COUNTER_BITS> row;
 
-    static sc_uint<4> red = 0x0;
-    static sc_uint<4> green = 0X5;
-    static sc_uint<4> blue = 0xA;
+    static sc_uint<CHANNEL_WIDTH> red = 0x0;
+    static sc_uint<CHANNEL_WIDTH> green = 0X5;
+    static sc_uint<CHANNEL_WIDTH> blue = 0xA;
 
     /* Counters logic */
     if(col < COLS) {

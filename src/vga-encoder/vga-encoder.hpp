@@ -12,7 +12,7 @@
 #define COLS 640
 
 #define PIXEL_TIME 39.328125
-#define MAX_ITERATIONS 640*480*3
+#define MAX_ITERATIONS (640*480*3)
 
 /* FSM States */
 #define FSM_VSYNC  0
@@ -38,6 +38,10 @@
 #define NUMBER_CHANNELS_BITS 3
 #define PACKAGE_LENGTH 2 /* 16 bits package length */
 #define PIXEL_WIDTH 12
+#define CHANNEL_WIDTH 4
+#define FSM_STATE_BITS 3
+#define ROWS_COUNTER_BITS 9
+#define COLS_COUNTER_BITS 10
 
 #define READ_DELAY 10 /* 10ns */
 
@@ -46,17 +50,17 @@ struct vga_encoder : Node
     /* Pixels Queue */
     std::queue<unsigned short> pixels_queue;
 
-    sc_uint<12> pixel_out;
+    sc_uint<PIXEL_WIDTH> pixel_out;
     
     sc_out<bool >  h_sync;
     sc_out<bool >  v_sync;
     
-    sc_uint<10>   col; /* 640 cols */
-    sc_uint<9>    row; /* 480 rows */
-    sc_uint<12> pixel;
+    sc_uint<COLS_COUNTER_BITS>   col; /* 640 cols */
+    sc_uint<ROWS_COUNTER_BITS>    row; /* 480 rows */
+    sc_uint<PIXEL_WIDTH> pixel;
 
-    sc_uint<3>  state = 0;
-    sc_uint<3>  next_state = 0;
+    sc_uint<FSM_STATE_BITS>  state = 0;
+    sc_uint<FSM_STATE_BITS>  next_state = 0;
 
     sc_event wr_t, rd_t, next_state_t, write_pixel;
 
