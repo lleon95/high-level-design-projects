@@ -1,9 +1,5 @@
 #include "systemc.h"
 
-#include "tlm.h"
-#include "tlm_utils/simple_initiator_socket.h"
-#include "tlm_utils/simple_target_socket.h"
-
 #include "vga-encoder.hpp"
 #include "router.hpp"
 
@@ -19,7 +15,7 @@ sc_event _pixel_ready;
 sc_event _start_sim;
 sc_trace_file *wf = sc_create_vcd_trace_file("decoder");
 
-sc_uint<12> pixel_compute ();
+static sc_uint<12> pixel_compute ();
 
 struct DummySender : public Node {
     /* Initialization done by the parent class */
@@ -127,7 +123,7 @@ sc_main (int argc, char* argv[])
 /*
  * This function computes a new pixel, emulating the image-processor module
  */
-sc_uint<12>
+static sc_uint<12>
 pixel_compute ()
 {
     sc_uint<12> pixel;
