@@ -1,0 +1,54 @@
+Compiling *.c *cpp files
+Simulation Started
+ADC: Sending 0x03f02 to 1 @ 0 s
+Sending 0xf02 to ADC
+ADC: Sending 0x0291f to 1 @ 10 ns
+Node-> Destination address: 0 Me: 3 Action - Transfer: 1 Data: f02 Command: 1
+Retransmitted to: 4
+Node-> Destination address: 1 Me: 0 Action - Transfer: 1 Data: 3f02 Command: 1
+Retransmitted to: 1
+ADC: Sending 0x02e03 to 1 @ 20 ns
+Ring-> Destination address: 1 Me: 1 Data: 3f02 Command: 1
+Retransmitted to: 2
+Ring-> Destination address: 0 Me: 0 Data: f02 Command: 1
+Retransmitted to: 1
+Node-> Destination address: 1 Me: 0 Action - Transfer: 1 Data: 291f Command: 1
+Retransmitted to: 1
+ADC: Sending 0x0348a to 1 @ 30 ns
+Ring-> Destination address: 1 Me: 3 Data: 3f02 Command: 1
+Received by: 3
+Node-> Destination address: 1 Me: 0 Action - Transfer: 1 Data: 2e03 Command: 1
+Retransmitted to: 1
+Ring-> Destination address: 0 Me: 1 Data: f02 Command: 1
+Received by: 1
+Dummy Receiver: Transaction received: 0xf02
+ADC: Sending 0x03d33 to 1 @ 40 ns
+Ring-> Destination address: 1 Me: 1 Data: 291f Command: 1
+Retransmitted to: 2
+Node-> Destination address: 1 Me: 0 Action - Transfer: 1 Data: 348a Command: 1
+Retransmitted to: 1
+ADC: Sending 0x035d9 to 1 @ 50 ns
+Ring-> Destination address: 1 Me: 3 Data: 291f Command: 1
+Received by: 3
+Node-> Destination address: 1 Me: 0 Action - Transfer: 1 Data: 3d33 Command: 1
+Retransmitted to: 1
+Ring-> Destination address: 1 Me: 1 Data: 2e03 Command: 1
+Retransmitted to: 2
+Ring-> Destination address: 1 Me: 1 Data: 348a Command: 1
+Retransmitted to: 2
+Node-> Destination address: 1 Me: 0 Action - Transfer: 1 Data: 35d9 Command: 1
+Retransmitted to: 1
+Ring-> Destination address: 1 Me: 3 Data: 2e03 Command: 1
+Received by: 3
+Ring-> Destination address: 1 Me: 3 Data: 348a Command: 1
+Received by: 3
+Ring-> Destination address: 1 Me: 1 Data: 3d33 Command: 1
+Retransmitted to: 2
+Ring-> Destination address: 1 Me: 1 Data: 35d9 Command: 1
+Retransmitted to: 2
+Ring-> Destination address: 1 Me: 3 Data: 3d33 Command: 1
+Received by: 3
+Ring-> Destination address: 1 Me: 3 Data: 35d9 Command: 1
+Received by: 3
+@1100 ns Terminating simulation
+Simulation Ended
