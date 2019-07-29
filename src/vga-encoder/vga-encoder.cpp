@@ -117,7 +117,6 @@ vga_encoder::send_pixel()
     /* Enqueue next pixel */
     if(pixels_queue.empty()) {
         pixel_out = 0;
-        return;
     } else {
         pixel_out = pixels_queue.front();
         pixels_queue.pop();
