@@ -7,7 +7,7 @@
 #include "vga-encoder.hpp"
 #include "router.hpp"
 
-#define RUNTIME 170000000
+#define RUNTIME 1700000000
 #define CHANNEL_WIDTH 4
 #define MAX_PIXEL_VALUE 4096
 
@@ -91,31 +91,28 @@ sc_main (int argc, char* argv[])
     sc_signal<bool>  h_sync;
     sc_signal<bool>  v_sync;
 
-    Node* cpu =  new DummySender("cpu"); 
-    cpu->addr = CPU_ADDRESS;
-    
-    /* DUT */
+    Node* cpu =  new DummySender("cpu");
     vga_encoder* encoder = new vga_encoder("decoder");
-    encoder->addr = ENCODER_ADDRESS;
+    Node* dac = new DummyReceiver("dac");
 
     /* Output */
     encoder->h_sync(h_sync);
     encoder->v_sync(v_sync);
 
-    Node* dac = new DummyReceiver("dac");
-    dac->addr = DAC_ADDRESS;
-
     /* Connect the DUT */
     Router cpu_router("router1", cpu);
+    cpu_router.addr = CPU_ADDRESS;
     Router encoder_router("router2", encoder);
+    encoder_router.addr = ENCODER_ADDRESS;
     Router dac_router("router3", dac);
+    dac_router.addr = DAC_ADDRESS;
 
     cpu_router.initiator_ring->socket.bind(encoder_router.target_ring->socket);
     encoder_router.initiator_ring->socket.bind(dac_router.target_ring->socket);
     dac_router.initiator_ring->socket.bind(cpu_router.target_ring->socket);
 
     srand (time(NULL));
-    
+
     /* Dump the desired signals */
     sc_trace(wf, c_result, "pixel_in");
     sc_trace(wf, sysc_result, "pixel_out");
@@ -124,7 +121,7 @@ sc_main (int argc, char* argv[])
 
     sc_start();
 
-    return 0; 
+    return 0;
 }
 
 /*

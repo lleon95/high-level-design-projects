@@ -61,26 +61,21 @@ struct vga_encoder : Node
     sc_event wr_t, rd_t, next_state_t, write_pixel;
 
     SC_HAS_PROCESS(vga_encoder);
-
     vga_encoder(const sc_module_name & name) : Node(name) {
         reset();
 	}
 
     /* Control stage */
     void thread_process();
-
     void reading_process();
-
     void FSM_next_state();
-
     void FSM_output_logic();
-
-    /* Input ports */
     void reset();
 
     /* Datapath */
     void send_pixel();
 
+    /* Signal output */
     void put_rgb_signal();
 
 };

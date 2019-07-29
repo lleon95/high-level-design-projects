@@ -121,7 +121,7 @@ vga_encoder::send_pixel()
         pixel_out = pixels_queue.front();
         pixels_queue.pop();
     }
-    
+
     /* Write to output */
     put_rgb_signal();
 }
