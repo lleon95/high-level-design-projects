@@ -4,11 +4,13 @@
 void
 vga_encoder::thread_process()
 {
-    while(true) {
+    long int iterations = 0;
+    while(iterations < MAX_ITERATIONS) {
         wait(next_state_t);
         state = next_state;
         FSM_next_state();
         FSM_output_logic();
+        iterations++;
     }
 }
 
