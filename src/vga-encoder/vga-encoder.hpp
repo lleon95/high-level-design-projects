@@ -46,11 +46,10 @@ struct vga_encoder : Node
     std::queue<unsigned short> pixels_queue;
 
     sc_uint<12> pixel_out;
-    sc_out<sc_uint<19> >  pixel_counter;
-
+    
     sc_out<bool >  h_sync;
     sc_out<bool >  v_sync;
-
+    
     sc_uint<10>   col; /* 640 cols */
     sc_uint<9>    row; /* 480 rows */
     sc_uint<12> pixel;
@@ -63,11 +62,13 @@ struct vga_encoder : Node
     SC_HAS_PROCESS(vga_encoder);
 
     vga_encoder(const sc_module_name & name) : Node(name) {
-
+        reset();
 	}
 
     /* Control stage */
     void thread_process();
+
+    void reading_process();
 
     void FSM_next_state();
 

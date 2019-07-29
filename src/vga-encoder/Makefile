@@ -2,9 +2,10 @@ SYSTEMC_HOME=/opt/systemc
 GCC=g++
 LDFLAGS= -lsystemc
 CXXFLAGS=-Wall -Wextra
+INCLUDES=-I../router/
 
 MODULE=vga-encoder
-SOURCES=$(MODULE).cpp $(MODULE)-tbb.cpp
+SOURCES=$(MODULE).cpp $(MODULE)-tbb.cpp ../router/router.cpp
 
 all: $(MODULE)
 

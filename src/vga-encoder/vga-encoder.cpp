@@ -113,8 +113,14 @@ void
 vga_encoder::send_pixel()
 {
     /* Enqueue next pixel */
-    pixel_out = pixels_queue.front();
-    pixels_queue.pop();
+    if(pixels_queue.empty()) {
+        pixel_out = 0;
+        return;
+    } else {
+        pixel_out = pixels_queue.front();
+        pixels_queue.pop();
+    }
+    
     /* Write to output */
     put_rgb_signal();
 }
