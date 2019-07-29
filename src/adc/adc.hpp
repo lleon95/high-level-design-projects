@@ -13,7 +13,7 @@
 
 #define ROWS_IN_FRAME 525   // Rows in a screen, not the visible ones
 #define FRAMES 1             // Frames to simulate
-#define SIMULATION_TIME 5 * PIXEL_DELAY // ROW_DELAY * ROWS_IN_FRAME * FRAMES // In nano seconds
+#define SIMULATION_TIME 2 * PIXEL_DELAY // ROW_DELAY * ROWS_IN_FRAME * FRAMES // In nano seconds
 #define H_SYNC_SYNCH_PULSE_LENGHT 96 //In pixels
 #define V_SYNC_SYNCH_PULSE_LENGHT 2  //In rows
 
@@ -34,12 +34,12 @@
 
 // ADC module generating generic payload transactions
 
-struct adc : Node
-{   
+struct adc : Node {
     void thread_process();
     void reading_process();
-    
-    adc(const sc_module_name & name) : Node(name){
+
+    adc(const sc_module_name & name) : Node(name)
+    {
     } //End of constructor
 }; // End of adc module
 

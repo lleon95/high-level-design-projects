@@ -20,10 +20,10 @@ adc::thread_process()
     hsync = 1;
     vsync = 1;
     data = rand() % MAX_PIXEL_VALUE_PLUS_ONE;
-    data.range<12,12> = hsync;
-    data.range<13,13> = vsync;
-    cout << "ADC: Sending 0x" << hex << data << " to " << DECODER_ADDRESS 
-         << endl;
+    data.range(12,12) = hsync;
+    data.range(13,13) = vsync;
+    cout << "ADC: Sending 0x" << hex << data << " to " << DECODER_ADDRESS
+         << " @ " << sc_time_stamp() <<endl;
     initiator->write(DECODER_ADDRESS, (int)data, tlm::TLM_WRITE_COMMAND);
     wait(sc_time(10, SC_NS));
 
@@ -48,11 +48,11 @@ adc::thread_process()
             row = 1;
         }
 
-        data = rand() % MAX_PIXEL_VALUE_PLUS_ONE;
-        data.range<12,12> = hsync;
-        data.range<13,13> = vsync;
-        cout << "ADC: Sending 0x" << hex << data << " to " << DECODER_ADDRESS 
-             << endl;
+        data = rand() % (MAX_PIXEL_VALUE_PLUS_ONE);
+        data.range(12,12) = hsync;
+        data.range(13,13) = vsync;
+        cout << "ADC: Sending 0x" << hex << data << " to " << DECODER_ADDRESS
+             << " @ " << sc_time_stamp() <<endl;
         initiator->write(DECODER_ADDRESS, (int)data, tlm::TLM_WRITE_COMMAND);
         wait(sc_time(PIXEL_DELAY, SC_NS));   // PIXEL_DELAY nano seconds elapsed
     }
@@ -61,7 +61,7 @@ adc::thread_process()
 void
 adc::reading_process()
 {
-    while(true){
+    while(true) {
         wait(*(incoming_notification));
         unsigned short data = target->incoming_buffer;
         //We shouldn't receive any transactions, but if we do ...

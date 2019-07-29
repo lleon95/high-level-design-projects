@@ -2,7 +2,7 @@
 #include "adc.hpp"
 #include "router.hpp"
 
-#define TRANSACTIONS_TO_SEND 5
+#define TRANSACTIONS_TO_SEND 1
 
 struct DummySender : public Node {
     /* Initialized in parent class */
@@ -15,9 +15,9 @@ struct DummySender : public Node {
     {
         int pixel;
         for (int i = 0; i < TRANSACTIONS_TO_SEND; i++) {
-            wait(sc_time(BUS_DELAY, SC_NS));
             pixel = rand() % MAX_PIXEL_VALUE_PLUS_ONE;
             initiator->write(ADC_ADDRESS, pixel, tlm::TLM_WRITE_COMMAND);
+            wait(sc_time(BUS_DELAY, SC_NS));
         }
     }
 
@@ -45,15 +45,11 @@ struct DummyReceiver : public Node {
     {
         while(true) {
             wait(*(incoming_notification));
-            bool command = target->command;
             unsigned short data = target->incoming_buffer;
-            wait(sc_time(BUS_DELAY, SC_NS));
 
-            /* Transfer to the next */
-            if(command == tlm::TLM_WRITE_COMMAND) {
-                cout << "Dummy Receiver: Transaction received: 0x" << hex 
-                     << data << endl;
-            }
+            cout << "Dummy Receiver: Transaction received: 0x" << hex
+                 << data << endl;
+            wait(sc_time(BUS_DELAY, SC_NS));
         }
     }
 };
@@ -76,10 +72,10 @@ sc_main (int argc, char* argv[])
     encoder_router.initiator_ring->socket.bind(adc_router.target_ring->socket);
     adc_router.initiator_ring->socket.bind(decoder_router.target_ring->socket);
     decoder_router.initiator_ring->socket.bind(encoder_router.target_ring->socket);
-    
-    sc_start();    
-    
-    sc_start(400, SC_NS);
+
+    sc_start();
+
+    cout << "@" << sc_time_stamp() << " Terminating simulation" << endl;
     return 0;
 }  //End of main
 
