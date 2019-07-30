@@ -2,13 +2,15 @@
 
 /* Control stage */
 void
-vga_encoder::FSM_Emulator()
+vga_encoder::thread_process()
 {
-    while(true) {
+    long int iterations = 0;
+    while(iterations < MAX_ITERATIONS) {
         wait(next_state_t);
         state = next_state;
         FSM_next_state();
         FSM_output_logic();
+        iterations++;
     }
 }
 
@@ -108,82 +110,45 @@ vga_encoder::reset()
     next_state_t.notify(READ_DELAY, SC_NS);
 }
 
-/* Output port - Status */
-void
-vga_encoder::read()
-{
-    rd_t.notify(READ_DELAY, SC_NS);
-}
-void
-vga_encoder::rd()
-{
-    while(true) {
-        wait(rd_t);
-        pixel_counter.write(COLS * row + col);
-    }
-}
-
 /* Datapath */
 void
 vga_encoder::send_pixel()
 {
     /* Enqueue next pixel */
-    pixel_out = pixels_queue.front();
-    pixels_queue.pop();
+    if(pixels_queue.empty()) {
+        pixel_out = 0;
+    } else {
+        pixel_out = pixels_queue.front();
+        pixels_queue.pop();
+    }
+
     /* Write to output */
     put_rgb_signal();
 }
 
 /* TLM implementation */
 void
-vga_encoder::b_transport(tlm::tlm_generic_payload& trans, sc_time& delay)
-{
-    tlm::tlm_command cmd = trans.get_command();
-    unsigned char*   ptr = trans.get_data_ptr();
-    unsigned int     len = trans.get_data_length();
-    unsigned char*   byt = trans.get_byte_enable_ptr();
-    unsigned int     wid = trans.get_streaming_width();
-
-    short* ptr_16_bits = reinterpret_cast<short*> (ptr);
-
-
-    if (byt != 0 || len > PACKAGE_LENGTH || wid < len) {
-        SC_REPORT_ERROR("TLM-2",
-                        "Target does not support given generic payload transaction");
-    }
-
-    /* Processor only accepts write operations */
-    if ( cmd == tlm::TLM_WRITE_COMMAND ) {
-        /* Copy pixels to internal buffer */
-        unsigned short pixel_in = *(ptr_16_bits) & 0xFFF;
-
-        /* Write pixels into queue */
-        pixels_queue.push(pixel_in);
-
-        trans.set_response_status( tlm::TLM_OK_RESPONSE );
-    }
-}
-
-void
 vga_encoder::put_rgb_signal()
 {
-    tlm::tlm_generic_payload trans;
-
-    /* Pointer to be passed to the target, target is resposible for freeing it */
-    int * return_pixel = new int;
-    sc_time delay = sc_time(INTERRUPT_DELAY, SC_NS);
-
-    *(return_pixel) = (int)pixel_out;
-    trans.set_address( DESTINATION_ADDRESS );
-    trans.set_command( tlm::TLM_WRITE_COMMAND );
-    trans.set_data_ptr( reinterpret_cast<unsigned char*>(return_pixel) );
-    trans.set_data_length( 2 );
-    trans.set_streaming_width( 2 ); /* = data_length to indicate no streaming */
-    trans.set_byte_enable_ptr( 0 ); /* 0 indicates unused */
-    trans.set_dmi_allowed( false ); /* Mandatory initial value */
-    trans.set_response_status(
-        tlm::TLM_INCOMPLETE_RESPONSE ); /* Mandatory initial value */
-
-    initiator_socket->b_transport( trans, delay );  // Blocking transport call
+    initiator->write(DAC_ADDRESS, (int)pixel_out, tlm::TLM_WRITE_COMMAND);
 }
 
+/* Node inheritation */
+void
+vga_encoder::reading_process()
+{
+    while(true) {
+        wait(*(incoming_notification));
+        bool command = target->command;
+        unsigned short data = target->incoming_buffer;
+        wait(sc_time(BUS_DELAY, SC_NS));
+
+        if(command == tlm::TLM_WRITE_COMMAND) {
+            /* Copy pixels to internal buffer */
+            unsigned short pixel_in = data & 0xFFF;
+
+            /* Write pixels into queue */
+            pixels_queue.push(pixel_in);
+        }
+    }
+}
