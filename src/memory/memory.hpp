@@ -2,6 +2,7 @@
 #define _MEMORY_HPP_
 
 #include "systemc.h"
+#include "node.hpp"
 
 /* Matches pixel width */
 #define DATA_WIDTH 12

@@ -26,8 +26,8 @@ sc_main (int argc, char* argv[])
     Node* cpu =  new image_processor("SOBEL");
     vga_encoder* encoder = new vga_encoder("encoder");
     digital_analog_converter* dac =  new digital_analog_converter("DAC");
-    Node* memory =  new memory("memory");
-    Node* DummyNode =  new DummyNode("dummy");
+    Node* Memory =  new memory("memory");
+    Node* dummyNode =  new DummyNode("dummy");
 
     /* Connect output signals to the DAC */
     dac->red_channel(red_channel);
@@ -48,9 +48,9 @@ sc_main (int argc, char* argv[])
     encoder_router.addr = ENCODER_ADDRESS;
     Router dac_router("dac-router", dac);
     dac_router.addr = DAC_ADDRESS;
-    Router memory_router("memory-router", dac);
+    Router memory_router("memory-router", Memory);
     memory_router.addr = MEMORY_ADDRESS;
-    Router dummy_router("dummy-router", dac);
+    Router dummy_router("dummy-router", dummyNode);
     dummy_router.addr = DUMMY_ADDRESS;
 
     /* Create ring with the routers */
