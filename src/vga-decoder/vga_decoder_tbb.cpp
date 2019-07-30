@@ -1,88 +1,177 @@
 #include <systemc.h>
-#include "vga_decoder.cpp"
+#include "vga_decoder.hpp"
+#include "router.hpp"
 
 #define ROWS_IN_SCREEN 525   // Rows in a screen, not the visible ones
-#define FRAMES 3             // Frames to simulate
+#define FRAMES 1             // Frames to simulate
 #define SIMULATION_TIME ROW_DELAY * ROWS_IN_SCREEN * FRAMES // In nano seconds
-#define H_SYNC_SYNCH_PULSE_LENGHT 96 //In pixels
-#define V_SYNC_SYNCH_PULSE_LENGHT 2  //In rows
+#define H_SYNC_SYNCH_PULSE_LENGTH 96 //In pixels
+#define V_SYNC_SYNCH_PULSE_LENGTH 2  //In rows
+
+#define DEBUG_H_SYNC_SYNCH_PULSE_LENGTH 2
+
+struct adc_simulator : Node {
+
+    adc_simulator(const sc_module_name & name) : Node(name)
+    {
+    } // End of Constructor
+
+    void
+    thread_process()
+    {
+        srand (time(NULL));
+
+        int column = 1;
+        int row = 1;
+
+        bool hsync;
+        bool vsync;
+        int pixel = 0;
+        sc_uint<PACKAGE_LENGTH_IN_BITS> data = 0;
+
+        // Reset the variables
+        hsync = 1;
+        vsync = 1;
+        data = rand() % MAX_PIXEL_VALUE_PLUS_ONE;
+        data.range(12,12) = hsync;
+        data.range(13,13) = vsync;
+        cout << "ADC: Sending package: 0x" << hex << data << endl;
+        initiator->write(DECODER_ADDRESS - 1, (int)data, tlm::TLM_WRITE_COMMAND);
+        wait(sc_time(PIXEL_DELAY, SC_NS));
+
+#ifdef DEBUG //To be able to run the simulation fast
+        for (int i = 0; i < DEBUG_PIXELS; i ++) {
+            if (column <= DEBUG_H_SYNC_SYNCH_PULSE_LENGTH) { //hsync should be cleared.
+                hsync = 0;
+            } else {
+                hsync = 1;
+            }
+            column++;
+
+            data = rand() % (MAX_PIXEL_VALUE_PLUS_ONE);
+            data.range(12,12) = hsync;
+            data.range(13,13) = vsync;
+            cout << "ADC: Sending package: 0x" << hex << data << endl;
+            initiator->write(DECODER_ADDRESS - 1, (int)data, tlm::TLM_WRITE_COMMAND);
+            wait(sc_time(PIXEL_DELAY, SC_NS));
+        }
+#else
+        for (double simulated_time = 0; simulated_time < SIMULATION_TIME;
+                simulated_time += PIXEL_DELAY) {
+            if (column <= H_SYNC_SYNCH_PULSE_LENGHT) { //hsync should be cleared.
+                hsync = 0;
+            } else {
+                hsync = 1;
+            }
+            if (row <= V_SYNC_SYNCH_PULSE_LENGHT) { //vsync should be cleared.
+                vsync = 0;
+            } else {
+                vsync = 1;
+            }
+            column++;
+            if (column == PIXELS_IN_ROW + 1) { //It's a new row
+                column = 1;
+                row++;
+            }
+            if (row == ROWS_IN_FRAME + 1) { //It's a new frame
+                row = 1;
+            }
+
+            data = rand() % (MAX_PIXEL_VALUE_PLUS_ONE);
+            data.range(12,12) = hsync;
+            data.range(13,13) = vsync;
+            cout << "ADC: Sending 0x" << hex << data << " to " << DECODER_ADDRESS
+                 << " @ " << sc_time_stamp() <<endl;
+            initiator->write(DECODER_ADDRESS - 1, (int)data, tlm::TLM_WRITE_COMMAND);
+            wait(sc_time(PIXEL_DELAY, SC_NS));
+        }
+#endif //DEBUG
+    }
+
+    void
+    reading_process()
+    {
+        /* No reading operations are needed on the adc_simulator */
+    }
+}; /* End of Module adc_simulator */
+
+struct Memory: Node {
+
+
+#ifdef DEBUG
+    int received_pixels;
+    unsigned short mem[DEBUG_PIXELS + 1];
+#else
+    enum {SIZE = RESOLUTION};
+    unsigned short mem[SIZE];
+#endif
+
+    Memory(const sc_module_name & name) : Node(name)
+    {
+        for (int i = 0; i < sizeof(mem)/sizeof(mem[0]); i++) {
+            mem[i] = 0x0;
+        }
+#ifdef DEBUG
+        received_pixels = 0;
+#endif
+    } // End of Constructor
+
+    void
+    thread_process()
+    {
+        /* No writing operations are needed on the memory */
+    }
+
+    void
+    reading_process()
+    {
+        while(true) {
+            wait(*(incoming_notification));
+            unsigned short data = target->incoming_buffer;
+
+            cout << "CPU: Transaction received: 0x" << hex
+                 << data << endl;
+            mem[received_pixels] = data;
+            received_pixels++;
+            wait(sc_time(BUS_DELAY, SC_NS));
+        }
+    }
+}; //End of Memory module
+
 
 int
 sc_main (int argc, char* argv[])
 {
-    srand (time(NULL));
-    // Inputs
-    sc_signal<sc_uint<PIXEL_SIZE> > pixel_in;
-    sc_signal<bool> hsync;
-    sc_signal<bool> vsync;
+    /* Connect the DUT */
 
-    //Outputs
-    sc_signal<sc_uint<PIXEL_SIZE> > pixel_out;
-    sc_signal<bool> frame_start;
+    Node* node_ADC =  new adc_simulator("ADC"); //
+    node_ADC->addr = ADC_ADDRESS;
+    Node* node_decoder = new vga_decoder("Decoder");
+    node_decoder->addr = DECODER_ADDRESS;
+    Node* node_CPU = new Memory("CPU");
+    node_CPU->addr = CPU_ADDRESS;
 
-    // Instantiate the DUT
-    vga_decoder decoder("Decoder");
+    Router adc_router("router0", node_ADC);
+    Router decoder_router("router1", node_decoder);
+    Router cpu_router("router3", node_CPU);
 
-    // Connect the DUT
-    decoder.pixel_in(pixel_in);
-    decoder.hsync(hsync);
-    decoder.vsync(vsync);
-    decoder.pixel_out(pixel_out);
-    decoder.frame_start(frame_start);
+    adc_router.initiator_ring->socket.bind(decoder_router.target_ring->socket);
+    decoder_router.initiator_ring->socket.bind(cpu_router.target_ring->socket);
+    cpu_router.initiator_ring->socket.bind(adc_router.target_ring->socket);
 
-    // Open VCD file
-    sc_trace_file *wf = sc_create_vcd_trace_file("vga_decoder");
-    wf->set_time_unit(1, SC_PS);
+    adc_router.addr = ADC_ADDRESS;
+    decoder_router.addr = DECODER_ADDRESS;
+    cpu_router.addr = CPU_ADDRESS;
 
-    // Dump the desired signals to vcd
-    sc_trace(wf, pixel_in, "pixel_in");
-    sc_trace(wf, hsync, "h_sync");
-    sc_trace(wf, vsync, "v_sync");
-    sc_trace(wf, pixel_out, "pixel_out");
-    sc_trace(wf, frame_start, "frame_start");
-
-    // Simulation-control variables
-    int column = 1;
-    int row = 1;
-
-    //Start the simulation
-    sc_start(0, SC_NS);
-    cout << "@" << sc_time_stamp() << endl;
-
-    // Reset the inputs
-    pixel_in = 0;
-    hsync = 1;
-    vsync = 1;
-    sc_start(1, SC_NS);
-
-    for (double simulated_time = 0; simulated_time < SIMULATION_TIME;
-            simulated_time += PIXEL_DELAY) {
-        if (column <= H_SYNC_SYNCH_PULSE_LENGHT) { //hsync should be cleared.
-            hsync = 0;
-        } else {
-            hsync = 1;
-        }
-        if (row <= V_SYNC_SYNCH_PULSE_LENGHT) { //vsync should be cleared.
-            vsync = 0;
-        } else {
-            vsync = 1;
-        }
-        column++;
-        if (column == PIXELS_IN_ROW + 1) { //It's a new row
-            column = 1;
-            row++;
-        }
-        if (row == ROWS_IN_FRAME + 1) { //It's a new frame
-            row = 1;
-        }
-
-        pixel_in.write(rand() % (1 << PIXEL_SIZE));
-
-        sc_start(PIXEL_DELAY, SC_NS);  // PIXEL_DELAY nano seconds elapsed
+    sc_start();
+#ifdef DEBUG
+    for (int i = 0;
+            i < sizeof(((Memory*)node_CPU)->mem)/sizeof(((Memory*)node_CPU)->mem[0]); i++) {
+        cout << "Memory[" << i << "] = " << hex << ((Memory*)node_CPU)->mem[i]
+             << endl;
     }
-
-    cout << "@" << sc_time_stamp() << " Terminating simulation\n" << endl;
-    sc_close_vcd_trace_file(wf);
-    return 0;// Terminate simulation
-
+#endif
+    cout << "@" << sc_time_stamp() << " Terminating simulation" << endl;
+    return 0;
 }  //End of main
+
