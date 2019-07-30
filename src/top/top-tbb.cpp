@@ -7,6 +7,7 @@
 #include "router.hpp"
 #include "vga_decoder.hpp"
 #include "vga-encoder.hpp"
+#include "memory.hpp"
 
 int
 sc_main (int argc, char* argv[])
@@ -24,6 +25,7 @@ sc_main (int argc, char* argv[])
     Node* cpu =  new image_processor("SOBEL");
     vga_encoder* encoder = new vga_encoder("encoder");
     digital_analog_converter* dac =  new digital_analog_converter("DAC");
+    Node* memory =  new memory("memory");
 
     /* Connect output signals to the DAC */
     dac->red_channel(red_channel);
@@ -44,6 +46,8 @@ sc_main (int argc, char* argv[])
     encoder_router.addr = ENCODER_ADDRESS;
     Router dac_router("dac-router", dac);
     dac_router.addr = DAC_ADDRESS;
+    Router memory_router("memory-router", dac);
+    memory_router.addr = MEMORY_ADDRESS;
 
     /* Create ring with the routers */
     adc_router.initiator_ring->socket.bind(decoder_router.target_ring->socket);
