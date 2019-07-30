@@ -13,6 +13,7 @@ UNUSED | V SYNC | H SYNC |           PIXEL            |
 
 #define RESOLUTION (640*480)
 #define PIXEL_SIZE 12
+#define MAX_PIXEL_VALUE_PLUS_ONE (1 << PIXEL_SIZE)
 
 #define PIXEL_POS 0
 #define H_SYNC_POS 12
@@ -32,13 +33,16 @@ UNUSED | V SYNC | H SYNC |           PIXEL            |
 #define ADDRESSABLE_VIDEO_V_START 36
 #define ADDRESSABLE_VIDEO_V_END 515
 
-// Needed for the simple_target_socket
-#define SC_INCLUDE_DYNAMIC_PROCESSES
+#define PACKAGE_SIZE_IN_BYTES 2
+#define PACKAGE_LENGTH_IN_BITS (PACKAGE_SIZE_IN_BYTES * 8)
+
+#define DEBUG_PIXELS 5
+#define DEBUG_ADDRESSABLE_VIDEO_H_START 2
+#define DEBUG_MAX_PIXELS_TO_SEND DEBUG_PIXELS - DEBUG_ADDRESSABLE_VIDEO_H_START + 1
 
 struct vga_decoder : Node {
 
     //-----------Internal variables-------------------
-    int i;                //Internal counter to know the address we write.
     short pixel_in;
     short pixel;
     bool previous_h_sync;
@@ -47,7 +51,10 @@ struct vga_decoder : Node {
     bool current_v_sync;
 
     int h_count, v_count;        // Count for the column and row.
-
+#ifdef DEBUG
+    int pixels_transmitted;  //Used to stop the simulation once we sent the
+    //DEBUG mode pixels.
+#endif
     sc_event count_column_event; //Event to notify the start of a new column
     sc_event count_row_event;    //Event to notify the start of a new row
     sc_event update_output_event;
@@ -60,16 +67,22 @@ struct vga_decoder : Node {
     void column_count();
     void row_count();
     void sample_pixel();
-    
+
     void thread_process();
     void reading_process();
 
-    vga_decoder(const sc_module_name & name) : Node(name){
+    SC_HAS_PROCESS(vga_decoder);
+    vga_decoder(const sc_module_name & name) : Node(name)
+    {
 
         h_count  = 0;
         v_count  = 0;
         pixel_in = 0;
         pixel    = 0;
+
+#ifdef DEBUG
+        pixels_transmitted = 0;
+#endif
 
         previous_h_sync = 1;
         current_h_sync  = 1;
@@ -80,7 +93,6 @@ struct vga_decoder : Node {
         SC_THREAD(column_count);
         SC_THREAD(row_count);
         SC_THREAD(sample_pixel);
-        SC_THREAD(update_output);
 
     } //End of Constructor
 }; // End of module vga_decoder

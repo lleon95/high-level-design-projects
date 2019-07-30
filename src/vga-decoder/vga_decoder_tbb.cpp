@@ -1,170 +1,177 @@
 #include <systemc.h>
 #include "vga_decoder.hpp"
+#include "router.hpp"
 
 #define ROWS_IN_SCREEN 525   // Rows in a screen, not the visible ones
 #define FRAMES 1             // Frames to simulate
 #define SIMULATION_TIME ROW_DELAY * ROWS_IN_SCREEN * FRAMES // In nano seconds
-#define H_SYNC_SYNCH_PULSE_LENGHT 96 //In pixels
-#define V_SYNC_SYNCH_PULSE_LENGHT 2  //In rows
+#define H_SYNC_SYNCH_PULSE_LENGTH 96 //In pixels
+#define V_SYNC_SYNCH_PULSE_LENGTH 2  //In rows
 
-struct adc_simulator : sc_module {
+#define DEBUG_H_SYNC_SYNCH_PULSE_LENGTH 2
 
-    tlm_utils::simple_initiator_socket<adc_simulator> initiator_socket;
+struct adc_simulator : Node {
+
+    adc_simulator(const sc_module_name & name) : Node(name)
+    {
+    } // End of Constructor
 
     void
-    send_data(short data)
+    thread_process()
     {
-        tlm::tlm_generic_payload trans;
-        sc_time delay = sc_time(TRANSACTION_DELAY, SC_NS);
+        srand (time(NULL));
 
-        trans.set_command(tlm::TLM_WRITE_COMMAND);
-        trans.set_data_ptr(reinterpret_cast<unsigned char*>(&data));
-        trans.set_data_length(2);
-        trans.set_streaming_width(2); /* = data_length to indicate no streaming */
-        trans.set_byte_enable_ptr(0); /* 0 indicates unused */
-        trans.set_dmi_allowed(false); /* Mandatory initial value */
-        trans.set_response_status(
-            tlm::TLM_INCOMPLETE_RESPONSE ); /* Mandatory initial value */
-        cout << "ADC: Sending package: 0x" << hex << data << " @ "
-             << sc_time_stamp() << endl;
-        initiator_socket->b_transport(trans, delay);  // Blocking transport call
+        int column = 1;
+        int row = 1;
+
+        bool hsync;
+        bool vsync;
+        int pixel = 0;
+        sc_uint<PACKAGE_LENGTH_IN_BITS> data = 0;
+
+        // Reset the variables
+        hsync = 1;
+        vsync = 1;
+        data = rand() % MAX_PIXEL_VALUE_PLUS_ONE;
+        data.range(12,12) = hsync;
+        data.range(13,13) = vsync;
+        cout << "ADC: Sending package: 0x" << hex << data << endl;
+        initiator->write(DECODER_ADDRESS - 1, (int)data, tlm::TLM_WRITE_COMMAND);
+        wait(sc_time(PIXEL_DELAY, SC_NS));
+
+#ifdef DEBUG //To be able to run the simulation fast
+        for (int i = 0; i < DEBUG_PIXELS; i ++) {
+            if (column <= DEBUG_H_SYNC_SYNCH_PULSE_LENGTH) { //hsync should be cleared.
+                hsync = 0;
+            } else {
+                hsync = 1;
+            }
+            column++;
+
+            data = rand() % (MAX_PIXEL_VALUE_PLUS_ONE);
+            data.range(12,12) = hsync;
+            data.range(13,13) = vsync;
+            cout << "ADC: Sending package: 0x" << hex << data << endl;
+            initiator->write(DECODER_ADDRESS - 1, (int)data, tlm::TLM_WRITE_COMMAND);
+            wait(sc_time(PIXEL_DELAY, SC_NS));
+        }
+#else
+        for (double simulated_time = 0; simulated_time < SIMULATION_TIME;
+                simulated_time += PIXEL_DELAY) {
+            if (column <= H_SYNC_SYNCH_PULSE_LENGHT) { //hsync should be cleared.
+                hsync = 0;
+            } else {
+                hsync = 1;
+            }
+            if (row <= V_SYNC_SYNCH_PULSE_LENGHT) { //vsync should be cleared.
+                vsync = 0;
+            } else {
+                vsync = 1;
+            }
+            column++;
+            if (column == PIXELS_IN_ROW + 1) { //It's a new row
+                column = 1;
+                row++;
+            }
+            if (row == ROWS_IN_FRAME + 1) { //It's a new frame
+                row = 1;
+            }
+
+            data = rand() % (MAX_PIXEL_VALUE_PLUS_ONE);
+            data.range(12,12) = hsync;
+            data.range(13,13) = vsync;
+            cout << "ADC: Sending 0x" << hex << data << " to " << DECODER_ADDRESS
+                 << " @ " << sc_time_stamp() <<endl;
+            initiator->write(DECODER_ADDRESS - 1, (int)data, tlm::TLM_WRITE_COMMAND);
+            wait(sc_time(PIXEL_DELAY, SC_NS));
+        }
+#endif //DEBUG
     }
 
-    SC_CTOR(adc_simulator) :
-        initiator_socket("initiator_socket") {} /* End of Constructor */
+    void
+    reading_process()
+    {
+        /* No reading operations are needed on the adc_simulator */
+    }
 }; /* End of Module adc_simulator */
 
-struct Memory: sc_module {
-    // TLM-2 socket, defaults to 32-bits wide, base protocol
-    tlm_utils::simple_target_socket<Memory> target_socket;
+struct Memory: Node {
 
+
+#ifdef DEBUG
+    int received_pixels;
+    unsigned short mem[DEBUG_PIXELS + 1];
+#else
     enum {SIZE = RESOLUTION};
+    unsigned short mem[SIZE];
+#endif
 
-    SC_CTOR(Memory) : target_socket("socket")
+    Memory(const sc_module_name & name) : Node(name)
     {
-        // Register callback for incoming b_transport interface method call
-        target_socket.register_b_transport(this, &Memory::b_transport);
-
-        // Initialize memory with random data
-        for (int i = 0; i < SIZE; i++) {
+        for (int i = 0; i < sizeof(mem)/sizeof(mem[0]); i++) {
             mem[i] = 0x0;
         }
-    }
+#ifdef DEBUG
+        received_pixels = 0;
+#endif
+    } // End of Constructor
 
-    // TLM-2 blocking transport method
-    virtual void
-    b_transport( tlm::tlm_generic_payload& trans, sc_time& delay )
+    void
+    thread_process()
     {
-        tlm::tlm_command cmd = trans.get_command();
-        sc_dt::uint64    adr = trans.get_address();
-        short*             ptr = (short*) trans.get_data_ptr();
-        unsigned int     len = trans.get_data_length();
-        unsigned char*   byt = trans.get_byte_enable_ptr();
-        unsigned int     wid = trans.get_streaming_width();
-
-        // Obliged to check address range and check for unsupported features,
-        //   i.e. byte enables, streaming, and bursts
-        // Can ignore DMI hint and extensions
-        // Using the SystemC report handler is an acceptable way of signalling an error
-
-        if (adr >= sc_dt::uint64(SIZE) || byt != 0 || len > 4 || wid < len) {
-            SC_REPORT_ERROR("TLM-2",
-                            "Target does not support given generic payload transaction");
-        }
-
-        // Obliged to implement read and write commands
-        if ( cmd == tlm::TLM_READ_COMMAND ) {
-            memcpy(ptr, &mem[adr], len);
-        } else if ( cmd == tlm::TLM_WRITE_COMMAND ) {
-            memcpy(&mem[adr], ptr, len);
-            cout << "Memory: 0x" << hex << *ptr << " was written to 0x"
-                 << hex << adr << " @ " << sc_time_stamp() << endl;
-        }
-        // Obliged to set response status to indicate successful completion
-        trans.set_response_status( tlm::TLM_OK_RESPONSE );
+        /* No writing operations are needed on the memory */
     }
 
-    short mem[SIZE];
+    void
+    reading_process()
+    {
+        while(true) {
+            wait(*(incoming_notification));
+            unsigned short data = target->incoming_buffer;
+
+            cout << "CPU: Transaction received: 0x" << hex
+                 << data << endl;
+            mem[received_pixels] = data;
+            received_pixels++;
+            wait(sc_time(BUS_DELAY, SC_NS));
+        }
+    }
 }; //End of Memory module
 
-
-SC_MODULE(Top)
-{
-    adc_simulator *adc;
-    vga_decoder   *decoder;
-    Memory        *memory;
-
-    SC_CTOR(Top) {
-        // Instantiate components
-        adc     = new adc_simulator("ADC");
-        decoder = new vga_decoder("vga_decoder");
-        memory  = new Memory("memory");
-
-        adc->initiator_socket.bind(decoder->target_socket);
-        decoder->initiator_socket.bind(memory->target_socket);
-    }
-}; //End of Top module
 
 int
 sc_main (int argc, char* argv[])
 {
-    srand (time(NULL));
+    /* Connect the DUT */
 
-    bool hsync;
-    bool vsync;
+    Node* node_ADC =  new adc_simulator("ADC"); //
+    node_ADC->addr = ADC_ADDRESS;
+    Node* node_decoder = new vga_decoder("Decoder");
+    node_decoder->addr = DECODER_ADDRESS;
+    Node* node_CPU = new Memory("CPU");
+    node_CPU->addr = CPU_ADDRESS;
 
-    //Outputs
-    // NONE
+    Router adc_router("router0", node_ADC);
+    Router decoder_router("router1", node_decoder);
+    Router cpu_router("router3", node_CPU);
 
-    // Instantiate the DUT
-    Top decoder("Decoder");
+    adc_router.initiator_ring->socket.bind(decoder_router.target_ring->socket);
+    decoder_router.initiator_ring->socket.bind(cpu_router.target_ring->socket);
+    cpu_router.initiator_ring->socket.bind(adc_router.target_ring->socket);
 
-    // Simulation-internal variables
-    int column = 1;
-    int row = 1;
-    short data = 0;
+    adc_router.addr = ADC_ADDRESS;
+    decoder_router.addr = DECODER_ADDRESS;
+    cpu_router.addr = CPU_ADDRESS;
 
-    //Start the simulation
-    sc_start(0,SC_NS);
-    cout << "@" << sc_time_stamp()<< endl;
-
-    // Reset the inputs
-    pixel_in = 0;
-    hsync = 1;
-    vsync = 1;
-    data = rand() % (1 << PIXEL_SIZE);
-    data = (short) (vsync << V_SYNC_POS | hsync << H_SYNC_POS | data);
-    decoder.adc->send_data(data);
-    sc_start(10,SC_NS);
-
-    for (double simulated_time = 0; simulated_time < SIMULATION_TIME;
-            simulated_time += PIXEL_DELAY) {
-        if (column <= H_SYNC_SYNCH_PULSE_LENGHT) { //hsync should be cleared.
-            hsync = 0;
-        } else {
-            hsync = 1;
-        }
-        if (row <= V_SYNC_SYNCH_PULSE_LENGHT) { //vsync should be cleared.
-            vsync = 0;
-        } else {
-            vsync = 1;
-        }
-        column++;
-        if (column == PIXELS_IN_ROW + 1) { //It's a new row
-            column = 1;
-            row++;
-        }
-        if (row == ROWS_IN_FRAME + 1) { //It's a new frame
-            row = 1;
-        }
-
-        data = rand() % (1 << PIXEL_SIZE);
-        data = (short) (vsync << V_SYNC_POS | hsync << H_SYNC_POS | data);
-        decoder.adc->send_data(data);
-        sc_start(PIXEL_DELAY,SC_NS);   // PIXEL_DELAY nano seconds elapsed
+    sc_start();
+#ifdef DEBUG
+    for (int i = 0;
+            i < sizeof(((Memory*)node_CPU)->mem)/sizeof(((Memory*)node_CPU)->mem[0]); i++) {
+        cout << "Memory[" << i << "] = " << hex << ((Memory*)node_CPU)->mem[i]
+             << endl;
     }
-    cout << "@" << sc_time_stamp() <<" Terminating simulation" << endl;
-    return 0;// Terminate simulation
-
+#endif
+    cout << "@" << sc_time_stamp() << " Terminating simulation" << endl;
+    return 0;
 }  //End of main
 
