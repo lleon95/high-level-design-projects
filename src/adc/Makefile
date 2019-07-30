@@ -2,19 +2,20 @@ SYSTEMC_HOME=/opt/systemc
 GCC=g++
 LDFLAGS= -lsystemc
 CXXFLAGS=-Wall -Wextra
+DEFINES=-DDEBUG
+
+MODULE=adc
+SOURCES=$(MODULE).cpp $(MODULE)_tbb.cpp ../router/router.cpp
 INCLUDES=-I../router/
 
-MODULE=vga-encoder
-SOURCES=$(MODULE).cpp $(MODULE)-tbb.cpp ../router/router.cpp
 
 all: $(MODULE)
 
 $(MODULE) : $(SOURCES)
-	$(GCC) $(CXXFLAGS) $(INCLUDES) $(LDFLAGS) $(shell pkg-config --cflags --libs systemc) -o $@ $^
+	$(GCC) $(CXXFLAGS) $(INCLUDES) $(DEFINES) $(LDFLAGS) -o $@ $^
 
 test:
 	./$(MODULE)
 
 clean:
 	rm -f $(MODULE)
-

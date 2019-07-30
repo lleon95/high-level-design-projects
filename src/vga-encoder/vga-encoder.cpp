@@ -1,171 +1,156 @@
-#include "systemc.h"
-
 #include "vga-encoder.hpp"
 
-SC_MODULE (vga_encoder)
+/* Control stage */
+void
+vga_encoder::thread_process()
 {
-
-    sc_in<sc_uint<12> > pixel_in;
-    sc_out<bool >  pixel_unqueue;
-    sc_out<sc_uint<19> >  pixel_counter;
-
-    sc_out<bool >  h_sync;
-    sc_out<bool >  v_sync;
-    sc_out<sc_uint<4> > red_channel;
-    sc_out<sc_uint<4> > green_channel;
-    sc_out<sc_uint<4> > blue_channel;
-
-    sc_uint<10>   col; /* 640 cols */
-    sc_uint<9>    row; /* 480 rows */
-    sc_uint<12> pixel;
-
-    sc_uint<3>  state = 0;
-    sc_uint<3>  next_state = 0;
-
-    sc_event wr_t, rd_t, next_state_t;
-
-    SC_HAS_PROCESS(vga_encoder);
-    vga_encoder(sc_module_name vga_encoder) {
-        SC_THREAD(FSM_Emulator);
-        /* Ports */
-        SC_THREAD(wr);
-        SC_THREAD(rd);
+    long int iterations = 0;
+    while(iterations < MAX_ITERATIONS) {
+        wait(next_state_t);
+        state = next_state;
+        FSM_next_state();
+        FSM_output_logic();
+        iterations++;
     }
+}
 
-    /* Control stage */
-    void FSM_Emulator() {
-        while(true) {
-            wait(next_state_t);
-            state = next_state;
-            FSM_next_state();
-            FSM_output_logic();
-        }
-    }
-
-    void FSM_next_state() {
-        switch (state) {
-        case FSM_VSYNC:
-            next_state = FSM_V_BACK_PORCH;
-            break;
-        case FSM_V_BACK_PORCH:
-            next_state = FSM_H_SYNC;
-            break;
-        case FSM_H_SYNC:
-            next_state = FSM_H_BACK_PORCH;
-            break;
-        case FSM_H_BACK_PORCH:
+void
+vga_encoder::FSM_next_state()
+{
+    switch (state) {
+    case FSM_VSYNC:
+        next_state = FSM_V_BACK_PORCH;
+        break;
+    case FSM_V_BACK_PORCH:
+        next_state = FSM_H_SYNC;
+        break;
+    case FSM_H_SYNC:
+        next_state = FSM_H_BACK_PORCH;
+        break;
+    case FSM_H_BACK_PORCH:
+        next_state = FSM_SEND_PIXELS;
+        break;
+    case FSM_SEND_PIXELS:
+        if (col == COLS - 2) {
+            next_state = FSM_H_FRONT_PORCH;
+        } else {
             next_state = FSM_SEND_PIXELS;
-            break;
-        case FSM_SEND_PIXELS:
-            if (col == COLS - 2) {
-                next_state = FSM_H_FRONT_PORCH;
-            } else {
-                next_state = FSM_SEND_PIXELS;
-            }
-            break;
-        case FSM_H_FRONT_PORCH:
-            if (row == ROWS - 1) {
-                next_state = FSM_V_FRONT_PORCH;
-            } else {
-                next_state = FSM_H_SYNC;
-            }
-            break;
-        case FSM_V_FRONT_PORCH:
-            next_state = FSM_VSYNC;
-            break;
-        default:
-            next_state = FSM_VSYNC;
-            break;
         }
-    }
-
-    void FSM_output_logic() {
-        switch (state) {
-        case FSM_VSYNC:
-            v_sync.write(0);
-            h_sync.write(1);
-            pixel_unqueue.write(0);
-            col = 0;
-            row = 0;
-            next_state_t.notify(DELAY_VSYNC,SC_NS);
-            break;
-        case FSM_V_BACK_PORCH:
-            v_sync.write(1);
-            pixel_unqueue.write(0);
-            next_state_t.notify(DELAY_V_BACK_PORCH,SC_NS);
-            break;
-        case FSM_V_FRONT_PORCH:
-            v_sync.write(1);
-            pixel_unqueue.write(0);
-            next_state_t.notify(DELAY_V_FRONT_PORCH,SC_NS);
-            break;
-        case FSM_H_SYNC:
-            h_sync.write(0);
-            pixel_unqueue.write(0);
-            col = 0;
-            next_state_t.notify(DELAY_H_SYNC,SC_NS);
-            break;
-        case FSM_H_BACK_PORCH:
-            h_sync.write(1);
-            pixel_unqueue.write(0);
-            next_state_t.notify(DELAY_H_BACK_PORCH,SC_NS);
-            break;
-        case FSM_H_FRONT_PORCH:
-            h_sync.write(1);
-            pixel_unqueue.write(0);
-            row++;
-            next_state_t.notify(DELAY_H_FRONT_PORCH,SC_NS);
-            break;
-        case FSM_SEND_PIXELS:
-            h_sync.write(1);
-            pixel_unqueue.write(1);
-            //send_pixel();
-            col++;
-            next_state_t.notify(DELAY_SEND_PIXELS,SC_PS);
-            break;
-        default:
-            pixel_unqueue.write(0);
-            h_sync.write(1);
-            v_sync.write(1);
-            next_state_t.notify(DELAY_DEFAULT,SC_NS);
-            break;
+        break;
+    case FSM_H_FRONT_PORCH:
+        if (row == ROWS - 1) {
+            next_state = FSM_V_FRONT_PORCH;
+        } else {
+            next_state = FSM_H_SYNC;
         }
+        break;
+    case FSM_V_FRONT_PORCH:
+        next_state = FSM_VSYNC;
+        break;
+    default:
+        next_state = FSM_VSYNC;
+        break;
     }
+}
 
-    /* Input ports */
-    void reset() {
+void
+vga_encoder::FSM_output_logic()
+{
+    switch (state) {
+    case FSM_VSYNC:
+        v_sync.write(0);
+        h_sync.write(1);
         col = 0;
         row = 0;
-        next_state = FSM_VSYNC;
-        next_state_t.notify(READ_DELAY,SC_NS);
+        next_state_t.notify(DELAY_VSYNC, SC_NS);
+        break;
+    case FSM_V_BACK_PORCH:
+        v_sync.write(1);
+        next_state_t.notify(DELAY_V_BACK_PORCH, SC_NS);
+        break;
+    case FSM_V_FRONT_PORCH:
+        v_sync.write(1);
+        next_state_t.notify(DELAY_V_FRONT_PORCH, SC_NS);
+        break;
+    case FSM_H_SYNC:
+        h_sync.write(0);
+        col = 0;
+        next_state_t.notify(DELAY_H_SYNC, SC_NS);
+        break;
+    case FSM_H_BACK_PORCH:
+        h_sync.write(1);
+        next_state_t.notify(DELAY_H_BACK_PORCH, SC_NS);
+        break;
+    case FSM_H_FRONT_PORCH:
+        h_sync.write(1);
+        row++;
+        next_state_t.notify(DELAY_H_FRONT_PORCH, SC_NS);
+        break;
+    case FSM_SEND_PIXELS:
+        h_sync.write(1);
+        send_pixel();
+        col++;
+        next_state_t.notify(DELAY_SEND_PIXELS, SC_PS);
+        break;
+    default:
+        h_sync.write(1);
+        v_sync.write(1);
+        next_state_t.notify(DELAY_DEFAULT, SC_NS);
+        break;
     }
-    void write() {
-        wr_t.notify(WRITE_DELAY, SC_NS);
+}
+
+/* Input ports */
+void
+vga_encoder::reset()
+{
+    col = 0;
+    row = 0;
+    next_state = FSM_VSYNC;
+    next_state_t.notify(READ_DELAY, SC_NS);
+}
+
+/* Datapath */
+void
+vga_encoder::send_pixel()
+{
+    /* Enqueue next pixel */
+    if(pixels_queue.empty()) {
+        pixel_out = 0;
+    } else {
+        pixel_out = pixels_queue.front();
+        pixels_queue.pop();
     }
-    void wr() {
-        while(true) {
-            wait(wr_t);
-            pixel = pixel_in.read();
-            send_pixel();
+
+    /* Write to output */
+    put_rgb_signal();
+}
+
+/* TLM implementation */
+void
+vga_encoder::put_rgb_signal()
+{
+    cout << "CPU writing:\t" << pixel_out << " @ " << sc_time_stamp() << endl;
+    initiator->write(DAC_ADDRESS, (int)pixel_out, tlm::TLM_WRITE_COMMAND);
+}
+
+/* Node inheritation */
+void
+vga_encoder::reading_process()
+{
+    while(true) {
+        wait(*(incoming_notification));
+        bool command = target->command;
+        unsigned short data = target->incoming_buffer;
+        wait(sc_time(BUS_DELAY, SC_NS));
+
+        if(command == tlm::TLM_WRITE_COMMAND) {
+            /* Copy pixels to internal buffer */
+            unsigned short pixel_in = data & 0xFFF;
+            cout << "CPU received:\t" << data << " @ " << sc_time_stamp() << endl;
+
+            /* Write pixels into queue */
+            pixels_queue.push(pixel_in);
         }
     }
-
-    /* Output port - Status */
-    void read() {
-        rd_t.notify(READ_DELAY, SC_NS);
-    }
-    void rd() {
-        while(true) {
-            wait(rd_t);
-            pixel_counter.write(COLS*row + col);
-        }
-    }
-
-    /* Datapath */
-    void send_pixel() {
-        red_channel.write(pixel(11,8));
-        green_channel.write(pixel(7,4));
-        blue_channel.write(pixel(3,0));
-    }
-
-};
+}

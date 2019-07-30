@@ -4,7 +4,7 @@ LDFLAGS= -lsystemc
 CXXFLAGS=-Wall -Wextra
 INCLUDES=-I../router/
 
-MODULE=vga-encoder
+MODULE=dac
 SOURCES=$(MODULE).cpp $(MODULE)-tbb.cpp ../router/router.cpp
 
 all: $(MODULE)
@@ -16,5 +16,5 @@ test:
 	./$(MODULE)
 
 clean:
-	rm -f $(MODULE)
+	rm -f $(MODULE) $(MODULE).vcd
 

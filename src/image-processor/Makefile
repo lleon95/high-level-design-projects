@@ -1,10 +1,11 @@
-SYSTEMC_HOME=/opt/systemc
+SYSTEMC_HOME=/usr/local/systemc
 GCC=g++
-LDFLAGS= -lsystemc
+LDFLAGS= -lsystemc  -L$(SYSTEMC_HOME)/lib-linux64
 CXXFLAGS=-Wall -Wextra
+INCLUDES=-I../router/ -I$(SYSTEMC_HOME)/include
 
-MODULE=image_processor
-SOURCES=$(MODULE).cpp $(MODULE)-tbb.cpp
+MODULE=image-processor
+SOURCES=$(MODULE).cpp $(MODULE)-tbb.cpp ../router/router.cpp
 
 
 all: $(MODULE)
@@ -16,4 +17,4 @@ test:
 	./$(MODULE)
 
 clean:
-	rm -f $(MODULE)
+	rm -f $(MODULE) $(MODULE).vcd
