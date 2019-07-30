@@ -22,7 +22,9 @@ analogic_digital_converter::thread_process()
     data = rand() % MAX_PIXEL_VALUE_PLUS_ONE;
     data.range(12, 12) = hsync;
     data.range(13, 13) = vsync;
-
+    cout << "ADC writing:\t" << data << " @ " << sc_time_stamp() << endl;
+    initiator->write(DECODER_ADDRESS, (int)data, tlm::TLM_WRITE_COMMAND);
+    wait(sc_time(PIXEL_DELAY, SC_NS));
 #ifdef DEBUG //To be able to run the simulation fast    
     for (int i = 0; i < DEBUG_PIXELS; i ++) {
         if (column <= DEBUG_H_SYNC_SYNCH_PULSE_LENGTH) { //hsync should be cleared.
@@ -38,7 +40,7 @@ analogic_digital_converter::thread_process()
 
         cout << "ADC writing:\t" << data << " @ " << sc_time_stamp() << endl;
         initiator->write(DECODER_ADDRESS, (int)data, tlm::TLM_WRITE_COMMAND);
-        wait(sc_time(BUS_DELAY, SC_NS));   // PIXEL_DELAY nano seconds elapsed
+        wait(sc_time(PIXEL_DELAY, SC_NS));
     }
 #else
     for (double simulated_time = 0; simulated_time < SIMULATION_TIME;
@@ -84,4 +86,3 @@ analogic_digital_converter::reading_process()
              << " @ " << sc_time_stamp() << endl;
     }
 }
-
