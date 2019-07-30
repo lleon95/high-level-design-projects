@@ -1,6 +1,6 @@
 #include <math.h>
 
-#include "image_processor.hpp"
+#include "image-processor.hpp"
 
 /* Definition of Sobel filter in horizontal direction */
 const sc_int < CHANNEL_WIDTH + 1 > h_weights[3][3] = {

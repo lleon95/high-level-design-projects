@@ -4,7 +4,7 @@
 #include <systemc.h>
 #include <time.h>
 
-#include "image_processor.hpp"
+#include "image-processor.hpp"
 #include "router.hpp"
 
 #define TEST_ITERATIONS 10

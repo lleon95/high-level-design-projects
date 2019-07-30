@@ -4,7 +4,7 @@ LDFLAGS= -lsystemc
 CXXFLAGS=-Wall -Wextra
 INCLUDES=-I../router/
 
-MODULE=image_processor
+MODULE=image-processor
 SOURCES=$(MODULE).cpp $(MODULE)-tbb.cpp ../router/router.cpp
 
 
