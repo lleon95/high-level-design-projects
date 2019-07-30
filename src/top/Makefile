@@ -5,8 +5,8 @@ GCC=g++
 LDFLAGS= -lsystemc
 CXXFLAGS=-Wall -Wextra
 
-SOURCES=../image-processor/image-processor.cpp  ../dac/dac.cpp  ../memory/memory.cpp ../router/router.cpp ../vga-decoder/vga_decoder.cpp ../vga-encoder/vga-encoder.cpp ../router/router.cpp top-tbb.cpp
-INCLUDES=-I../image-processor/  -I../dac/  -I../memory/ -I../router/ -I../vga-decoder/ -I../vga-encoder/ -I../router/
+SOURCES=../image-processor/image-processor.cpp  ../dac/dac.cpp  ../memory/memory.cpp ../router/router.cpp ../vga-decoder/vga_decoder.cpp ../vga-encoder/vga-encoder.cpp ../router/router.cpp top-tbb.cpp ../adc/adc.cpp ../vga-decoder/vga_decoder.cpp
+INCLUDES=-I../image-processor/  -I../dac/  -I../memory/ -I../router/ -I../vga-decoder/ -I../vga-encoder/ -I../router/ -I../vga-decoder/ -I../adc/
 
 all: $(PROJECT)
 
