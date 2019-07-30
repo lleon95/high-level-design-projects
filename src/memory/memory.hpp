@@ -13,27 +13,19 @@
 #define DATA_DEPTH 1 << ADDR_WIDTH
 
 
+struct memory : Node {
 
-SC_MODULE (memory)
-{
-    /*------------Local Variables------------------------- */
-    sc_uint<DATA_WIDTH> _ramdata[DATA_DEPTH];
+  sc_uint<DATA_WIDTH> _ramdata[DATA_DEPTH];
 
-    sc_uint<DATA_WIDTH> _data;
-    sc_uint<ADDR_WIDTH> _address;
+  void thread_process();
+  void reading_process();
 
-    sc_event _wr_t;
+  sc_event update_event;
+  unsigned short _data;
 
-    /*------------Module Methods---------------------------*/
-    void write(sc_uint<ADDR_WIDTH> address, sc_uint<DATA_WIDTH> data);
-
-    sc_uint<DATA_WIDTH> read(sc_uint<ADDR_WIDTH> address);
-
-    void wr();
-
-    SC_CTOR(memory) {
-        SC_THREAD(wr);
-    } /* End of Constructor */
+  SC_HAS_PROCESS(memory);
+  memory(const sc_module_name & name) : Node(name)
+  { }
 
 }; /* End of memory module */
 
