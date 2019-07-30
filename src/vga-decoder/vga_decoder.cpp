@@ -20,11 +20,6 @@ vga_decoder::start_row_count()
 void
 vga_decoder::decode_pixel()
 {
-#ifdef DEBUG
-    if (pixels_transmitted >= DEBUG_MAX_PIXELS_TO_SEND) {
-        sc_stop();
-    }
-#endif
     while(true) {
         wait(decode_pixel_event);
 #ifdef DEBUG
@@ -35,7 +30,13 @@ vga_decoder::decode_pixel()
                 ((v_count >= ADDRESSABLE_VIDEO_V_START) && //Addressable vertical
                  (v_count <= ADDRESSABLE_VIDEO_V_END))) {
 #endif
-            sample_pixel_event.notify(SAMPLING_DELAY, SC_NS);
+#ifdef DEBUG
+            if (pixels_transmitted < DEBUG_MAX_PIXELS_TO_SEND) {
+#endif
+                sample_pixel_event.notify(SAMPLING_DELAY, SC_NS);
+#ifdef DEBUG
+            }
+#endif
         }
     }
 }
@@ -44,11 +45,6 @@ void
 vga_decoder::column_count()
 {
     while(true) {
-#ifdef DEBUG
-        if (pixels_transmitted >= DEBUG_MAX_PIXELS_TO_SEND) {
-            sc_stop();
-        }
-#endif
         wait(count_column_event);
         if (h_count < PIXELS_IN_ROW) {
             h_count += 1;
@@ -64,11 +60,6 @@ void
 vga_decoder::row_count()
 {
     while(true) {
-#ifdef DEBUG
-        if (pixels_transmitted >= DEBUG_MAX_PIXELS_TO_SEND) {
-            sc_stop();
-        }
-#endif
         wait(count_row_event);
         if (v_count < ROWS_IN_FRAME) {
             v_count += 1;
@@ -83,11 +74,6 @@ void
 vga_decoder::sample_pixel()
 {
     while(true) {
-#ifdef DEBUG
-        if (pixels_transmitted >= DEBUG_MAX_PIXELS_TO_SEND) {
-            sc_stop();
-        }
-#endif
         wait(sample_pixel_event);
         pixel = pixel_in;
         update_output_event.notify(UPDATE_OUTPUT_DELAY, SC_NS);
@@ -98,15 +84,10 @@ void
 vga_decoder::thread_process()
 {
     while(true) {
-#ifdef DEBUG
-        if (pixels_transmitted >= DEBUG_MAX_PIXELS_TO_SEND) {
-            sc_stop();
-        }
-#endif
-        wait(update_output_event);
-        cout << "Decoder: Sending pixel : 0x" << hex << pixel << endl;
-        initiator->write(CPU_ADDRESS - 1, (int)pixel, tlm::TLM_WRITE_COMMAND);
-        wait(sc_time(BUS_DELAY, SC_NS));
+            wait(update_output_event);
+            cout << "Decoder: Sending pixel : 0x" << hex << pixel << endl;
+            initiator->write(CPU_ADDRESS - 1, (int)pixel, tlm::TLM_WRITE_COMMAND);
+            wait(sc_time(BUS_DELAY, SC_NS));
 #ifdef DEBUG
         pixels_transmitted++;
 #endif
