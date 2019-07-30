@@ -21,15 +21,10 @@ sc_main (int argc, char* argv[])
 
     /* Nodes */
     Node* adc = new analogic_digital_converter("adc");
-    adc->addr = ADC_ADDRESS;
     Node* decoder = new vga_decoder("decoder");
-    decoder->addr = ENCODER_ADDRESS;
     Node* cpu =  new image_processor("SOBEL");
-    cpu->addr = CPU_ADDRESS;
     vga_encoder* encoder = new vga_encoder("encoder");
-    encoder->addr = ENCODER_ADDRESS;
     digital_analog_converter* dac =  new digital_analog_converter("DAC");
-    dac->addr = DAC_ADDRESS;
 
     /* Connect output signals to the DAC */
     dac->red_channel(red_channel);
@@ -41,10 +36,15 @@ sc_main (int argc, char* argv[])
 
     /* Routers */
     Router adc_router("adc-router", adc);
+    adc_router.addr = ADC_ADDRESS;
     Router decoder_router("decoder-router", decoder);
+    decoder_router.addr = ENCODER_ADDRESS;
     Router cpu_router("cpu-router", cpu);
+    cpu_router.addr = CPU_ADDRESS;
     Router encoder_router("encoder-router", encoder);
+    encoder_router.addr = ENCODER_ADDRESS;
     Router dac_router("dac-router", dac);
+    dac_router.addr = DAC_ADDRESS;
 
     /* Create ring with the routers */
     adc_router.initiator_ring->socket.bind(decoder_router.target_ring->socket);
