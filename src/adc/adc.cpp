@@ -27,7 +27,7 @@ analogic_digital_converter::thread_process()
     initiator->write(DECODER_ADDRESS, (int)data, tlm::TLM_WRITE_COMMAND);
     wait(sc_time(BUS_DELAY, SC_NS));
 
-#ifdef DEBUG //To be able to run the simulation fast
+#ifdef DEBUG //To be able to run the simulation fast    
     for (int i = 0; i < DEBUG_PIXELS; i ++) {
         if (column <= DEBUG_H_SYNC_SYNCH_PULSE_LENGTH) { //hsync should be cleared.
             hsync = 0;
@@ -44,7 +44,7 @@ analogic_digital_converter::thread_process()
         initiator->write(DECODER_ADDRESS, (int)data, tlm::TLM_WRITE_COMMAND);
         wait(sc_time(BUS_DELAY, SC_NS));   // PIXEL_DELAY nano seconds elapsed
     }
-#else
+#else    
     for (double simulated_time = 0; simulated_time < SIMULATION_TIME;
             simulated_time += PIXEL_DELAY) {
         if (column <= H_SYNC_SYNCH_PULSE_LENGHT) { //hsync should be cleared.
