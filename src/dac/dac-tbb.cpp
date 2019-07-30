@@ -112,7 +112,7 @@ sc_uint<PIXEL_WIDTH>
 pixel_compute ()
 {
     sc_uint<PIXEL_WIDTH> pixel;
-    pixel = rand() % MAX_PIXEL_OUTPUT; 
+    pixel = rand() % MAX_PIXEL_OUTPUT;
     return pixel;
 }
 

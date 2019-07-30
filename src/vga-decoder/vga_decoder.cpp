@@ -84,10 +84,10 @@ void
 vga_decoder::thread_process()
 {
     while(true) {
-            wait(update_output_event);
-            cout << "Decoder: Sending pixel : 0x" << hex << pixel << endl;
-            initiator->write(CPU_ADDRESS - 1, (int)pixel, tlm::TLM_WRITE_COMMAND);
-            wait(sc_time(BUS_DELAY, SC_NS));
+        wait(update_output_event);
+        cout << "Decoder: Sending pixel : 0x" << hex << pixel << endl;
+        initiator->write(CPU_ADDRESS - 1, (int)pixel, tlm::TLM_WRITE_COMMAND);
+        wait(sc_time(BUS_DELAY, SC_NS));
 #ifdef DEBUG
         pixels_transmitted++;
 #endif

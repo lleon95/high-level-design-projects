@@ -20,30 +20,30 @@ analogic_digital_converter::thread_process()
     hsync = 1;
     vsync = 1;
     data = rand() % MAX_PIXEL_VALUE_PLUS_ONE;
-    data.range(12,12) = hsync;
-    data.range(13,13) = vsync;
+    data.range(12, 12) = hsync;
+    data.range(13, 13) = vsync;
     cout << "ADC: Sending 0x" << hex << data << " to " << DECODER_ADDRESS
-         << " @ " << sc_time_stamp() <<endl;
+         << " @ " << sc_time_stamp() << endl;
     initiator->write(DECODER_ADDRESS, (int)data, tlm::TLM_WRITE_COMMAND);
     wait(sc_time(BUS_DELAY, SC_NS));
-    
+
 #ifdef DEBUG //To be able to run the simulation fast
     for (int i = 0; i < DEBUG_PIXELS; i ++) {
-            if (column <= DEBUG_H_SYNC_SYNCH_PULSE_LENGTH) { //hsync should be cleared.
-                hsync = 0;
-            } else {
-                hsync = 1;
-            }
-            column++;
-
-            data = rand() % (MAX_PIXEL_VALUE_PLUS_ONE);
-            data.range(12,12) = hsync;
-            data.range(13,13) = vsync;
-            cout << "ADC: Sending 0x" << hex << data << " to " << DECODER_ADDRESS
-                 << " @ " << sc_time_stamp() <<endl;
-            initiator->write(DECODER_ADDRESS, (int)data, tlm::TLM_WRITE_COMMAND);
-            wait(sc_time(BUS_DELAY, SC_NS));   // PIXEL_DELAY nano seconds elapsed
+        if (column <= DEBUG_H_SYNC_SYNCH_PULSE_LENGTH) { //hsync should be cleared.
+            hsync = 0;
+        } else {
+            hsync = 1;
         }
+        column++;
+
+        data = rand() % (MAX_PIXEL_VALUE_PLUS_ONE);
+        data.range(12, 12) = hsync;
+        data.range(13, 13) = vsync;
+        cout << "ADC: Sending 0x" << hex << data << " to " << DECODER_ADDRESS
+             << " @ " << sc_time_stamp() << endl;
+        initiator->write(DECODER_ADDRESS, (int)data, tlm::TLM_WRITE_COMMAND);
+        wait(sc_time(BUS_DELAY, SC_NS));   // PIXEL_DELAY nano seconds elapsed
+    }
 #else
     for (double simulated_time = 0; simulated_time < SIMULATION_TIME;
             simulated_time += PIXEL_DELAY) {
@@ -67,10 +67,10 @@ analogic_digital_converter::thread_process()
         }
 
         data = rand() % (MAX_PIXEL_VALUE_PLUS_ONE);
-        data.range(12,12) = hsync;
-        data.range(13,13) = vsync;
+        data.range(12, 12) = hsync;
+        data.range(13, 13) = vsync;
         cout << "ADC: Sending 0x" << hex << data << " to " << DECODER_ADDRESS
-             << " @ " << sc_time_stamp() <<endl;
+             << " @ " << sc_time_stamp() << endl;
         initiator->write(DECODER_ADDRESS, (int)data, tlm::TLM_WRITE_COMMAND);
         wait(sc_time(PIXEL_DELAY, SC_NS));   // PIXEL_DELAY nano seconds elapsed
     }
@@ -85,7 +85,7 @@ analogic_digital_converter::reading_process()
         unsigned short data = target->incoming_buffer;
         //We shouldn't receive any transactions, but if we do ...
         cerr << "ADC: ERROR - Transaction received: 0x" << hex << data
-             << " @ "<< sc_time_stamp() << endl;
+             << " @ " << sc_time_stamp() << endl;
     }
 }
 

@@ -82,13 +82,12 @@ process_pixel(int input_pixels, int pixel_buffer[], int pixel_index)
     /* Copy pixels to window buffer */
     for (int i = 0; i < 3; i++) {
         for( int j = 0; j < 3; j++) {
-	  int index = (pixel_index + (i - 1) * WIDTH + (j - 1));
-	  if(index > 0 && index < BUFFER_SIZE){
-            pixel_window[i][j] = pixel_buffer[index];
-	  }
-	  else{
-	    pixel_window[i][j] = 0;
-	  }
+            int index = (pixel_index + (i - 1) * WIDTH + (j - 1));
+            if(index > 0 && index < BUFFER_SIZE) {
+                pixel_window[i][j] = pixel_buffer[index];
+            } else {
+                pixel_window[i][j] = 0;
+            }
         }
     }
 
@@ -107,7 +106,7 @@ struct DummySender : public Node {
     {
         int pixel_error;
         for (int j = 0; j < 7; j++) {
-	  //for (int j = 0; j < HEIGHT; j++) {
+            //for (int j = 0; j < HEIGHT; j++) {
             for (int i = 0; i < WIDTH; i++) {
                 random_pixel = rand() % ( 1 << PIXEL_WIDTH );
 
@@ -117,16 +116,17 @@ struct DummySender : public Node {
 
                 /* Don't process another pixel until result can be tested */
                 wait(_pixel_ready);
-                c_result = process_pixel(random_pixel, pixel_buffer, (i + j * WIDTH) % BUFFER_SIZE);
+                c_result = process_pixel(random_pixel, pixel_buffer,
+                                         (i + j * WIDTH) % BUFFER_SIZE);
 
                 pixel_error = abs(c_result - sysc_result);
 
                 total_error += pixel_error;
-		printf("error: %d\t", pixel_error);
-		printf("(%d, %d)\t", i, j);
-		printf("input_pixel: %x\t", random_pixel);
-		printf("systemC_output: %x\t", sysc_result);
-		printf("expected output: %x\n", c_result);
+                printf("error: %d\t", pixel_error);
+                printf("(%d, %d)\t", i, j);
+                printf("input_pixel: %x\t", random_pixel);
+                printf("systemC_output: %x\t", sysc_result);
+                printf("expected output: %x\n", c_result);
 
             }
         }

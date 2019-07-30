@@ -4,6 +4,7 @@ SYSTEMC_HOME=/opt/systemc
 GCC=g++
 LDFLAGS= -lsystemc
 CXXFLAGS=-Wall -Wextra
+DEFINES=-DEBUG
 
 SOURCES=../image-processor/image-processor.cpp  ../dac/dac.cpp  ../memory/memory.cpp ../router/router.cpp ../vga-decoder/vga_decoder.cpp ../vga-encoder/vga-encoder.cpp ../router/router.cpp top-tbb.cpp ../adc/adc.cpp ../vga-decoder/vga_decoder.cpp
 INCLUDES=-I../image-processor/  -I../dac/  -I../memory/ -I../router/ -I../vga-decoder/ -I../vga-encoder/ -I../router/ -I../vga-decoder/ -I../adc/
@@ -11,10 +12,10 @@ INCLUDES=-I../image-processor/  -I../dac/  -I../memory/ -I../router/ -I../vga-de
 all: $(PROJECT)
 
 $(PROJECT) : $(SOURCES)
-	$(GCC) $(CXXFLAGS) $(INCLUDES) $(LDFLAGS) -o $@ $^
+	$(GCC) $(CXXFLAGS) $(DEFINES) $(INCLUDES) $(LDFLAGS) -o $@ $^
 
 test:
 	./$(MODULE)
 
 clean:
-	rm -f $(MODULE) $(MODULE).vcd
+	rm -f $(PROJECT)

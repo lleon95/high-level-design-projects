@@ -27,14 +27,13 @@ apply_sobel (sc_uint<CHANNEL_WIDTH> pixel_buffer[], int pixel_index)
     /* Copy pixels to window buffer */
     for (int i = 0; i < 3; i++) {
         for( int j = 0; j < 3; j++) {
-	  int index = (pixel_index + (i - 1) * WIDTH + (j - 1));
-	  
-	  if(index > 0 && index < BUFFER_SIZE){
-            pixel_window[i][j] = pixel_buffer[index];
-	  }
-	  else{
-	    pixel_window[i][j] = 0;
-	  }
+            int index = (pixel_index + (i - 1) * WIDTH + (j - 1));
+
+            if(index > 0 && index < BUFFER_SIZE) {
+                pixel_window[i][j] = pixel_buffer[index];
+            } else {
+                pixel_window[i][j] = 0;
+            }
         }
     }
 
@@ -76,7 +75,7 @@ void
 image_processor::thread_process()
 {
     while(true) {
-       wait(_pixel_ready);
+        wait(_pixel_ready);
 
         initiator->write(ENCODER_ADDRESS, (int)current_pixel, tlm::TLM_WRITE_COMMAND);
     }
