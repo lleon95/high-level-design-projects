@@ -6,5 +6,7 @@
 #define CPU_ADDRESS 3
 #define ENCODER_ADDRESS 4
 #define DAC_ADDRESS 5
+#define DUMMY_ADDRESS 6
+#define MEMORY_ADDRESS 7
 
 #endif /* _NODE_ADDRESS_ */
