@@ -63,9 +63,9 @@ Router::reading_process_ring()
              << data << " Command: " << command << endl;
 
         /* Transfer to the next */
-        if(addr == destination) {
+        if(addr != destination) {
             initiator_ring->write(destination, data, command);
-            cout << "Retransmitted to: " << addr + 1 << endl;
+            cout << "Retransmitted to: " << (addr + 1) % (DAC_ADDRESS+1)  << endl;
         } else {
             initiator_node->write(0, data, command); /* 0 is the connected node */
             cout << "Received by: " << addr << endl;

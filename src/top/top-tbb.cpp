@@ -38,7 +38,7 @@ sc_main (int argc, char* argv[])
     Router adc_router("adc-router", adc);
     adc_router.addr = ADC_ADDRESS;
     Router decoder_router("decoder-router", decoder);
-    decoder_router.addr = ENCODER_ADDRESS;
+    decoder_router.addr = DECODER_ADDRESS;
     Router cpu_router("cpu-router", cpu);
     cpu_router.addr = CPU_ADDRESS;
     Router encoder_router("encoder-router", encoder);
