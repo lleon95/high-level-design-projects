@@ -4,7 +4,7 @@
 
 //------------Code Starts Here-------------------------
 void
-adc::thread_process()
+analogic_digital_converter::thread_process()
 {
     srand (time(NULL));
 
@@ -78,7 +78,7 @@ adc::thread_process()
 }
 
 void
-adc::reading_process()
+analogic_digital_converter::reading_process()
 {
     while(true) {
         wait(*(incoming_notification));

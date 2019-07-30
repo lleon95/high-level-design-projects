@@ -61,7 +61,7 @@ sc_main (int argc, char* argv[])
 {
     /* Connect the DUT */
     
-    Node* node_ADC =  new adc("ADC"); //
+    Node* node_ADC =  new analogic_digital_converter("ADC"); //
     node_ADC->addr = ADC_ADDRESS;
     Node* node_decoder = new DummyReceiver("decoder");
     node_decoder->addr = DECODER_ADDRESS;
