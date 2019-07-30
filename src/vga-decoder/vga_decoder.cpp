@@ -1,5 +1,4 @@
 //-----------------------------------------------------
-#include "systemc.h"
 
 #include "vga_decoder.hpp"
 
@@ -21,12 +20,21 @@ vga_decoder::start_row_count()
 void
 vga_decoder::decode_pixel()
 {
+#ifdef DEBUG
+    if (pixels_transmitted >= DEBUG_MAX_PIXELS_TO_SEND) {
+        sc_stop();
+    }
+#endif
     while(true) {
         wait(decode_pixel_event);
+#ifdef DEBUG
+        if (h_count >= DEBUG_ADDRESSABLE_VIDEO_H_START) {
+#else
         if (((h_count >= ADDRESSABLE_VIDEO_H_START) &&
                 (h_count <= ADDRESSABLE_VIDEO_H_END))   && //Addressable horizontal
                 ((v_count >= ADDRESSABLE_VIDEO_V_START) && //Addressable vertical
                  (v_count <= ADDRESSABLE_VIDEO_V_END))) {
+#endif
             sample_pixel_event.notify(SAMPLING_DELAY, SC_NS);
         }
     }
@@ -36,6 +44,11 @@ void
 vga_decoder::column_count()
 {
     while(true) {
+#ifdef DEBUG
+        if (pixels_transmitted >= DEBUG_MAX_PIXELS_TO_SEND) {
+            sc_stop();
+        }
+#endif
         wait(count_column_event);
         if (h_count < PIXELS_IN_ROW) {
             h_count += 1;
@@ -51,6 +64,11 @@ void
 vga_decoder::row_count()
 {
     while(true) {
+#ifdef DEBUG
+        if (pixels_transmitted >= DEBUG_MAX_PIXELS_TO_SEND) {
+            sc_stop();
+        }
+#endif
         wait(count_row_event);
         if (v_count < ROWS_IN_FRAME) {
             v_count += 1;
@@ -65,6 +83,11 @@ void
 vga_decoder::sample_pixel()
 {
     while(true) {
+#ifdef DEBUG
+        if (pixels_transmitted >= DEBUG_MAX_PIXELS_TO_SEND) {
+            sc_stop();
+        }
+#endif
         wait(sample_pixel_event);
         pixel = pixel_in;
         update_output_event.notify(UPDATE_OUTPUT_DELAY, SC_NS);
@@ -75,13 +98,18 @@ void
 vga_decoder::thread_process()
 {
     while(true) {
+#ifdef DEBUG
+        if (pixels_transmitted >= DEBUG_MAX_PIXELS_TO_SEND) {
+            sc_stop();
+        }
+#endif
         wait(update_output_event);
-        cout << "Decoder: Sending pixel " << dec
-             << h_count - ADDRESSABLE_VIDEO_H_START << ", " << dec
-             << v_count - ADDRESSABLE_VIDEO_V_START << ": 0x" << hex << pixel
-             << " to memory address 0x" << hex << i << " @ " << sc_time_stamp()
-             << endl;
-        initiator->write(CPU_ADDRESS, (int)pixel, tlm::TLM_WRITE_COMMAND);
+        cout << "Decoder: Sending pixel : 0x" << hex << pixel << endl;
+        initiator->write(CPU_ADDRESS - 1, (int)pixel, tlm::TLM_WRITE_COMMAND);
+        wait(sc_time(BUS_DELAY, SC_NS));
+#ifdef DEBUG
+        pixels_transmitted++;
+#endif
     }
 }
 
@@ -90,13 +118,12 @@ vga_decoder::reading_process()
 {
     while(true) {
         wait(*(incoming_notification));
-        tlm::tlm_command cmd = target->command;
-        unsigned short data = target->incomming_buffer;
+        bool cmd = target->command;
+        unsigned short data = target->incoming_buffer;
         wait(sc_time(BUS_DELAY, SC_NS));
 
         if (cmd == tlm::TLM_WRITE_COMMAND) {
-            cout << "Decoder: Transaction received: 0x" << hex << data << " @ "
-                 << sc_time_stamp() << endl;
+            cout << "Decoder: Transaction received: 0x" << hex << data << endl;
             pixel_in = GET_PIXEL(data);
             current_h_sync = GET_H_SYNC(data);
             current_v_sync = GET_V_SYNC(data);
