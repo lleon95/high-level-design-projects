@@ -66,7 +66,7 @@ sc_main (int argc, char* argv[])
     sc_signal<sc_uint<CHANNEL_WIDTH> > blue_channel;
 
     Node* encoder = new DummySender("encoder");
-    dac* dut_dac =  new dac("DAC"); //
+    digital_analog_converter* dut_dac =  new digital_analog_converter("DAC"); //
     Node* decoder = new DummyReceiver("decoder");
 
     /* Output */

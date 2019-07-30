@@ -2,7 +2,7 @@
 
 /* Reception stage */
 void
-dac::reading_process()
+digital_analog_converter::reading_process()
 {
     while(true) {
         wait(*(incoming_notification));
@@ -19,7 +19,7 @@ dac::reading_process()
 }
 
 void
-dac::thread_process()
+digital_analog_converter::thread_process()
 {
     while(true) {
         wait(wr_t);
