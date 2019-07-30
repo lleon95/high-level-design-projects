@@ -22,10 +22,6 @@ analogic_digital_converter::thread_process()
     data = rand() % MAX_PIXEL_VALUE_PLUS_ONE;
     data.range(12, 12) = hsync;
     data.range(13, 13) = vsync;
-    cout << "ADC: Sending 0x" << hex << data << " to " << DECODER_ADDRESS
-         << " @ " << sc_time_stamp() << endl;
-    initiator->write(DECODER_ADDRESS, (int)data, tlm::TLM_WRITE_COMMAND);
-    wait(sc_time(BUS_DELAY, SC_NS));
 
 #ifdef DEBUG //To be able to run the simulation fast    
     for (int i = 0; i < DEBUG_PIXELS; i ++) {
