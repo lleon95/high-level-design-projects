@@ -76,6 +76,7 @@ image_processor::thread_process()
 {
     while(true) {
         wait(_pixel_ready);
+        cout << "CPU writing:\t" << current_pixel << " @ " << sc_time_stamp() << endl;
 
         initiator->write(ENCODER_ADDRESS, (int)current_pixel, tlm::TLM_WRITE_COMMAND);
     }
@@ -92,6 +93,7 @@ image_processor::reading_process()
 
         if(command == tlm::TLM_WRITE_COMMAND) {
             current_pixel = data & 0xFFF;
+            cout << "CPU received:\t" << current_pixel << " @ " << sc_time_stamp() << endl;
 
             /* Convert pixel to gray and save to buffer */
             pixel_buffer[pixel_index] = convert_to_grayscale( current_pixel );

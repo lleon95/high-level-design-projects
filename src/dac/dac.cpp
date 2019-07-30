@@ -12,6 +12,7 @@ digital_analog_converter::reading_process()
 
         if(command == tlm::TLM_WRITE_COMMAND) {
             pixel = (sc_uint<PIXEL_WIDTH>)(data & 0xFFF);
+            cout << "DAC received:\t" << data << " @ " << sc_time_stamp() << endl;
 
             wr_t.notify(sc_time(WRITE_DELAY, SC_NS));
         }

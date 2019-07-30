@@ -38,10 +38,10 @@ Router::reading_process_node()
         bool command = target_node->command;
         unsigned short destination = target_node->destination_address;
         unsigned short data = target_node->incoming_buffer;
-	int id = global_id_counter++;
+        int id = global_id_counter++;
         wait(sc_time(BUS_DELAY, SC_NS));
 
-	cout << "ID: " << id << "\t";
+        cout << "ID: " << id << "\t";
 
         cout << "Node-> Destination address: " <<  destination
              << " Me: " << addr << " Action - Transfer: "
@@ -62,21 +62,21 @@ Router::reading_process_ring()
         bool command = target_ring->command;
         unsigned short destination = target_ring->destination_address;
         unsigned short data = target_ring->incoming_buffer;
-	int id = target_ring->id_extension;
+        int id = target_ring->id_extension;
         wait(sc_time(BUS_DELAY, SC_NS));
 
-	cout << "ID: " << id << "\t";
-	
+        cout << "ID: " << id << "\t";
+
         cout << "Ring-> Destination address: " <<  destination
              << " Me: " << addr << " Data: "
              << data << " Command: " << command << endl;
 
         /* Transfer to the next */
         if(addr != destination) {
-	  initiator_ring->write(destination, data, command, id);
-            cout << "Retransmitted to: " << (addr + 1) % (DAC_ADDRESS+1)  << endl;
+            initiator_ring->write(destination, data, command, id);
+            cout << "Retransmitted to: " << (addr + 1) % (DAC_ADDRESS + 1)  << endl;
         } else {
-	  initiator_node->write(0, data, command, id); /* 0 is the connected node */
+            initiator_node->write(0, data, command, id); /* 0 is the connected node */
             cout << "Received by: " << addr << endl;
         }
     }
