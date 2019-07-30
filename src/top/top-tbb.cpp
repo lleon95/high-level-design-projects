@@ -4,7 +4,6 @@
 #include "dac.hpp"
 #include "image-processor.hpp"
 #include "node.hpp"
-#include "memory.hpp"
 #include "router.hpp"
 #include "vga_decoder.hpp"
 #include "vga-encoder.hpp"

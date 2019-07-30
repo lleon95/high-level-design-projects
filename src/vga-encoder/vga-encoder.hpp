@@ -12,7 +12,8 @@
 #define COLS 640
 
 #define PIXEL_TIME 39.328125
-#define MAX_ITERATIONS (640*480*3)
+//#define MAX_ITERATIONS (640*480*3)
+#define MAX_ITERATIONS (10)
 
 /* FSM States */
 #define FSM_VSYNC  0

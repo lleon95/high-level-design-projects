@@ -1,8 +1,8 @@
-SYSTEMC_HOME=/opt/systemc
+SYSTEMC_HOME=/usr/local/systemc
 GCC=g++
-LDFLAGS= -lsystemc
+LDFLAGS= -lsystemc  -L$(SYSTEMC_HOME)/lib-linux64
 CXXFLAGS=-Wall -Wextra
-INCLUDES=-I../router/
+INCLUDES=-I../router/ -I$(SYSTEMC_HOME)/include
 
 MODULE=image-processor
 SOURCES=$(MODULE).cpp $(MODULE)-tbb.cpp ../router/router.cpp

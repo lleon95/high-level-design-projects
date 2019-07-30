@@ -101,7 +101,6 @@ vga_decoder::reading_process()
         wait(*(incoming_notification));
         bool cmd = target->command;
         unsigned short data = target->incoming_buffer;
-        wait(sc_time(BUS_DELAY, SC_NS));
 
         if (cmd == tlm::TLM_WRITE_COMMAND) {
             cout << "Decoder: Transaction received: 0x" << hex << data << endl;

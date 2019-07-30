@@ -1,13 +1,13 @@
 PROJECT=top
 
-SYSTEMC_HOME=/opt/systemc
+SYSTEMC_HOME=/usr/local/systemc
 GCC=g++
-LDFLAGS= -lsystemc
+LDFLAGS= -lsystemc -L$(SYSTEMC_HOME)/lib-linux64
 CXXFLAGS=-Wall -Wextra
 DEFINES=-DDEBUG
 
-SOURCES=../image-processor/image-processor.cpp  ../dac/dac.cpp  ../memory/memory.cpp ../router/router.cpp ../vga-decoder/vga_decoder.cpp ../vga-encoder/vga-encoder.cpp ../router/router.cpp top-tbb.cpp ../adc/adc.cpp ../vga-decoder/vga_decoder.cpp
-INCLUDES=-I../image-processor/  -I../dac/  -I../memory/ -I../router/ -I../vga-decoder/ -I../vga-encoder/ -I../router/ -I../vga-decoder/ -I../adc/
+SOURCES=../image-processor/image-processor.cpp  ../dac/dac.cpp  ../router/router.cpp ../vga-decoder/vga_decoder.cpp ../vga-encoder/vga-encoder.cpp ../router/router.cpp top-tbb.cpp ../adc/adc.cpp ../vga-decoder/vga_decoder.cpp
+INCLUDES=-I../image-processor/  -I../dac/ -I../router/ -I../vga-decoder/ -I../vga-encoder/ -I../router/ -I../vga-decoder/ -I../adc/ -I$(SYSTEMC_HOME)/include/
 
 all: $(PROJECT)
 
