@@ -1,0 +1,20 @@
+PROJECT=top
+
+SYSTEMC_HOME=/opt/systemc
+GCC=g++
+LDFLAGS= -lsystemc
+CXXFLAGS=-Wall -Wextra
+
+SOURCES=../image-processor/image-processor.cpp  ../dac/dac.cpp  ../memory/memory.cpp ../router/router.cpp ../vga-decoder/vga_decoder.cpp ../vga-encoder/vga-encoder.cpp ../router/router.cpp top-tbb.cpp
+INCLUDES=-I../image-processor/  -I../dac/  -I../memory/ -I../router/ -I../vga-decoder/ -I../vga-encoder/ -I../router/
+
+all: $(PROJECT)
+
+$(PROJECT) : $(SOURCES)
+	$(GCC) $(CXXFLAGS) $(INCLUDES) $(LDFLAGS) -o $@ $^
+
+test:
+	./$(MODULE)
+
+clean:
+	rm -f $(MODULE) $(MODULE).vcd
