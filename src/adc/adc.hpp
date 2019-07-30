@@ -32,10 +32,10 @@
 #define DEBUG_PIXELS 5
 #define DEBUG_H_SYNC_SYNCH_PULSE_LENGTH 2
 
-struct adc : Node {
+struct analogic_digital_converter : Node {
     void thread_process();
     void reading_process();
-    adc(const sc_module_name & name) : Node(name)
+    analogic_digital_converter(const sc_module_name & name) : Node(name)
     {
     } //End of constructor
 }; // End of adc module

@@ -2,7 +2,7 @@
 
 /* Reception stage */
 void
-dac::reading_process()
+digital_analog_converter::reading_process()
 {
     while(true) {
         wait(*(incoming_notification));
@@ -12,6 +12,7 @@ dac::reading_process()
 
         if(command == tlm::TLM_WRITE_COMMAND) {
             pixel = (sc_uint<PIXEL_WIDTH>)(data & 0xFFF);
+            cout << "DAC received:\t" << data << " @ " << sc_time_stamp() << endl;
 
             wr_t.notify(sc_time(WRITE_DELAY, SC_NS));
         }
@@ -19,7 +20,7 @@ dac::reading_process()
 }
 
 void
-dac::thread_process()
+digital_analog_converter::thread_process()
 {
     while(true) {
         wait(wr_t);

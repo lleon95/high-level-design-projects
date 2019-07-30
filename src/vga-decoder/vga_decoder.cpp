@@ -84,10 +84,11 @@ void
 vga_decoder::thread_process()
 {
     while(true) {
-            wait(update_output_event);
-            cout << "Decoder: Sending pixel : 0x" << hex << pixel << endl;
-            initiator->write(CPU_ADDRESS - 1, (int)pixel, tlm::TLM_WRITE_COMMAND);
-            wait(sc_time(BUS_DELAY, SC_NS));
+        wait(update_output_event);
+        cout << "Decoder sending:\t" << pixel << " @ " << sc_time_stamp() << endl;
+
+        initiator->write(CPU_ADDRESS, (int)pixel, tlm::TLM_WRITE_COMMAND);
+        wait(sc_time(BUS_DELAY, SC_NS));
 #ifdef DEBUG
         pixels_transmitted++;
 #endif
@@ -101,10 +102,9 @@ vga_decoder::reading_process()
         wait(*(incoming_notification));
         bool cmd = target->command;
         unsigned short data = target->incoming_buffer;
-        wait(sc_time(BUS_DELAY, SC_NS));
 
         if (cmd == tlm::TLM_WRITE_COMMAND) {
-            cout << "Decoder: Transaction received: 0x" << hex << data << endl;
+            cout << "Decoder received:\t" << data << " @ " << sc_time_stamp() << endl;
             pixel_in = GET_PIXEL(data);
             current_h_sync = GET_H_SYNC(data);
             current_v_sync = GET_V_SYNC(data);

@@ -1,4 +1,3 @@
-
 // Filename: tlm2_getting_started_4.cpp
 
 //----------------------------------------------------------------------
@@ -67,6 +66,10 @@ using namespace std;
 
 /* Generic Payload Extension for ID */
 struct ID_extension: tlm::tlm_extension<ID_extension> {
+  unsigned int transaction_id;
+  ID_extension(int id) : transaction_id(0) {
+    this->transaction_id = id;
+  }
   ID_extension() : transaction_id(0) {}
   virtual tlm_extension_base* clone() const { // Must override pure virtual clone method
     ID_extension* t = new ID_extension;
@@ -76,7 +79,6 @@ struct ID_extension: tlm::tlm_extension<ID_extension> {
   virtual void copy_from(tlm_extension_base const &ext) {
     transaction_id = static_cast<ID_extension const &>(ext).transaction_id;
   }
-  unsigned int transaction_id;
 };
 
 /* Generic dynamic list */
@@ -84,6 +86,7 @@ typedef struct queue{
   unsigned short * datum;
   sc_uint<ADDRESS_WIDTH> address;
   bool cmd;
+  int id;
 } queue_element;
 
 static ID_extension* id_extension = new ID_extension;
@@ -105,13 +108,14 @@ struct Initiator: sc_module
   queue_element queue;
   sc_event write_req;
 
-  void write(int adr, int datum, bool cmd) {
+  void write(int adr, int datum, bool cmd, int old_id=-1) {
 
     queue_element new_transaction;
     new_transaction.address = adr;
     new_transaction.cmd = cmd;
     new_transaction.datum = new unsigned short;
     *(new_transaction.datum) = datum;
+    new_transaction.id = old_id;
 
     initiator_queue.push(new_transaction);
 
@@ -131,7 +135,6 @@ struct Initiator: sc_module
       while(!initiator_queue.empty()) {
         /* Create new transaction */
         tlm::tlm_generic_payload* trans = new tlm::tlm_generic_payload;
-        trans->set_extension( id_extension );
 
         /* Unqueue next transaction */
         queue_element next_transaction = initiator_queue.front();
@@ -140,7 +143,11 @@ struct Initiator: sc_module
         unsigned short * data = next_transaction.datum;
         tlm::tlm_command cmd = 
             static_cast<tlm::tlm_command>(next_transaction.cmd);
-      
+	int id = next_transaction.id;
+
+	ID_extension* id_extension_tlm = new ID_extension(id);
+	trans->set_extension( id_extension_tlm );
+	        
         /* Build the transaction */
         trans->set_command( cmd );
         trans->set_address( adr );

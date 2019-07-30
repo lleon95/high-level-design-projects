@@ -33,8 +33,8 @@ struct adc_simulator : Node {
         hsync = 1;
         vsync = 1;
         data = rand() % MAX_PIXEL_VALUE_PLUS_ONE;
-        data.range(12,12) = hsync;
-        data.range(13,13) = vsync;
+        data.range(12, 12) = hsync;
+        data.range(13, 13) = vsync;
         cout << "ADC: Sending package: 0x" << hex << data << endl;
         initiator->write(DECODER_ADDRESS - 1, (int)data, tlm::TLM_WRITE_COMMAND);
         wait(sc_time(PIXEL_DELAY, SC_NS));
@@ -49,8 +49,8 @@ struct adc_simulator : Node {
             column++;
 
             data = rand() % (MAX_PIXEL_VALUE_PLUS_ONE);
-            data.range(12,12) = hsync;
-            data.range(13,13) = vsync;
+            data.range(12, 12) = hsync;
+            data.range(13, 13) = vsync;
             cout << "ADC: Sending package: 0x" << hex << data << endl;
             initiator->write(DECODER_ADDRESS - 1, (int)data, tlm::TLM_WRITE_COMMAND);
             wait(sc_time(PIXEL_DELAY, SC_NS));
@@ -78,10 +78,10 @@ struct adc_simulator : Node {
             }
 
             data = rand() % (MAX_PIXEL_VALUE_PLUS_ONE);
-            data.range(12,12) = hsync;
-            data.range(13,13) = vsync;
+            data.range(12, 12) = hsync;
+            data.range(13, 13) = vsync;
             cout << "ADC: Sending 0x" << hex << data << " to " << DECODER_ADDRESS
-                 << " @ " << sc_time_stamp() <<endl;
+                 << " @ " << sc_time_stamp() << endl;
             initiator->write(DECODER_ADDRESS - 1, (int)data, tlm::TLM_WRITE_COMMAND);
             wait(sc_time(PIXEL_DELAY, SC_NS));
         }
@@ -108,7 +108,7 @@ struct Memory: Node {
 
     Memory(const sc_module_name & name) : Node(name)
     {
-        for (int i = 0; i < sizeof(mem)/sizeof(mem[0]); i++) {
+        for (int i = 0; i < sizeof(mem) / sizeof(mem[0]); i++) {
             mem[i] = 0x0;
         }
 #ifdef DEBUG
@@ -166,7 +166,8 @@ sc_main (int argc, char* argv[])
     sc_start();
 #ifdef DEBUG
     for (int i = 0;
-            i < sizeof(((Memory*)node_CPU)->mem)/sizeof(((Memory*)node_CPU)->mem[0]); i++) {
+            i < sizeof(((Memory*)node_CPU)->mem) / sizeof(((Memory*)node_CPU)->mem[0]);
+            i++) {
         cout << "Memory[" << i << "] = " << hex << ((Memory*)node_CPU)->mem[i]
              << endl;
     }

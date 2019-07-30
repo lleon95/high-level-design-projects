@@ -130,6 +130,7 @@ vga_encoder::send_pixel()
 void
 vga_encoder::put_rgb_signal()
 {
+    cout << "CPU writing:\t" << pixel_out << " @ " << sc_time_stamp() << endl;
     initiator->write(DAC_ADDRESS, (int)pixel_out, tlm::TLM_WRITE_COMMAND);
 }
 
@@ -146,6 +147,7 @@ vga_encoder::reading_process()
         if(command == tlm::TLM_WRITE_COMMAND) {
             /* Copy pixels to internal buffer */
             unsigned short pixel_in = data & 0xFFF;
+            cout << "CPU received:\t" << data << " @ " << sc_time_stamp() << endl;
 
             /* Write pixels into queue */
             pixels_queue.push(pixel_in);
