@@ -7,6 +7,7 @@
 #include "router.hpp"
 #include "vga_decoder.hpp"
 #include "vga-encoder.hpp"
+#include "dummy-node.hpp"
 #include "memory.hpp"
 
 int
@@ -26,6 +27,7 @@ sc_main (int argc, char* argv[])
     vga_encoder* encoder = new vga_encoder("encoder");
     digital_analog_converter* dac =  new digital_analog_converter("DAC");
     Node* memory =  new memory("memory");
+    Node* DummyNode =  new DummyNode("dummy");
 
     /* Connect output signals to the DAC */
     dac->red_channel(red_channel);
@@ -48,14 +50,17 @@ sc_main (int argc, char* argv[])
     dac_router.addr = DAC_ADDRESS;
     Router memory_router("memory-router", dac);
     memory_router.addr = MEMORY_ADDRESS;
+    Router dummy_router("dummy-router", dac);
+    dummy_router.addr = DUMMY_ADDRESS;
 
     /* Create ring with the routers */
     adc_router.initiator_ring->socket.bind(decoder_router.target_ring->socket);
     decoder_router.initiator_ring->socket.bind(cpu_router.target_ring->socket);
     cpu_router.initiator_ring->socket.bind(encoder_router.target_ring->socket);
     encoder_router.initiator_ring->socket.bind(dac_router.target_ring->socket);
-    dac_router.initiator_ring->socket.bind(adc_router.target_ring->socket);
-
+    dac_router.initiator_ring->socket.bind(dummy_router.target_ring->socket);
+    dummy_router.initiator_ring->socket.bind(memory_router.target_ring->socket);
+    memory_router.initiator_ring->socket.bind(adc_router.target_ring->socket);
     /* Start the simulation */
     sc_start();
 
