@@ -40,16 +40,19 @@ Router::reading_process_node()
         int id = global_id_counter++;
         wait(sc_time(BUS_DELAY, SC_NS));
 
+#ifdef TRANSACTION_PRINT
         cout << "ID: " << id << "\t";
 
         cout << "Node-> Destination address: " <<  destination
              << " Me: " << addr << " Action - Transfer: "
              << transfer_next << " Data: "
              << data << " Command: " << command << endl;
-
+	
+        cout << "Retransmitted to: " << addr + 1 << endl;
+#endif /* TRANSCTION_PRINT */
+	
         /* Transfer to the next */
         initiator_ring->write(destination, data, command, id);
-        cout << "Retransmitted to: " << addr + 1 << endl;
     }
 }
 
@@ -64,20 +67,26 @@ Router::reading_process_ring()
         int id = target_ring->id_extension;
         wait(sc_time(BUS_DELAY, SC_NS));
 
+#ifdef TRANSACTION_PRINT
         cout << "ID: " << id << "\t";
 
         cout << "Ring-> Destination address: " <<  destination
              << " Me: " << addr << " Data: "
              << data << " Command: " << command << endl;
+#endif /* TRANSCTION_PRINT */
 
         /* Transfer to the next */
         if(addr != destination) {
             initiator_ring->write(destination, data, command, id);
+#ifdef TRANSACTION_PRINT
             cout << "Retransmitted to: " << (addr + 1) % (DAC_ADDRESS + 1)  << endl;
+#endif /* TRANSCTION_PRINT */
         } else {
             initiator_node->write(MAX_ADDRESS, data, command,
                                   id); /* 0 is the connected node */
+#ifdef TRANSACTION_PRINT
             cout << "Received by: " << addr << endl;
+#endif /* TRANSCTION_PRINT */
         }
     }
 }

@@ -89,8 +89,9 @@ vga_decoder::thread_process()
 {
     while(true) {
         wait(update_output_event);
+#ifdef TRANSACTION_PRINT
         cout << "Decoder sending:\t" << pixel << " @ " << sc_time_stamp() << endl;
-
+#endif /* TRANSACTION_PRINT */
         initiator->write(CPU_ADDRESS, (int)pixel, tlm::TLM_WRITE_COMMAND);
         wait(sc_time(BUS_DELAY, SC_NS));
     }
@@ -105,7 +106,9 @@ vga_decoder::reading_process()
         unsigned short data = target->incoming_buffer;
 
         if (cmd == tlm::TLM_WRITE_COMMAND) {
+#ifdef TRANSACTION_PRINT
             cout << "Decoder received:\t" << data << " @ " << sc_time_stamp() << endl;
+#endif /* TRANSACTION_PRINT */
             pixel_in = GET_PIXEL(data);
             if ((h_sync == 0) && (previous_h_sync == 1)) { //Falling egde in h sync
                 start_column_count();

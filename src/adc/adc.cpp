@@ -13,7 +13,9 @@ analogic_digital_converter::thread_process()
         data.range(7, 4) = green_channel;
         data.range(3, 0) = blue_channel;
 
+#ifdef TRANSACTION_PRINT
         cout << "ADC writing:\t" << data << " @ " << sc_time_stamp() << endl;
+#endif /* TRANSCTION_PRINT */
         initiator->write(DECODER_ADDRESS, (int)data, tlm::TLM_WRITE_COMMAND);
         wait(sc_time(PIXEL_DELAY, SC_NS));   // PIXEL_DELAY nano seconds elapsed
     }

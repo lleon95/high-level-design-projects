@@ -79,7 +79,7 @@ sc_main (int argc, char* argv[])
     sc_trace(wf, v_sync_out, "vsync_out");
 
     /* Start the simulation, this loop emulates the sensor analogic behaviour */
-    for(int i = 0; i < DEBUG_PIXELS; i++) {
+    for(int i = 0; i < (ROWS_IN_SCREEN * PIXELS_IN_ROW); i++) {
         if((i % PIXELS_IN_ROW) == 0) { /* Signal new row */
             h_sync_in = 1;
         } else {
