@@ -2,13 +2,11 @@
 #include "vga_decoder.hpp"
 #include "router.hpp"
 
-#define ROWS_IN_SCREEN 525   // Rows in a screen, not the visible ones
 #define FRAMES 1             // Frames to simulate
-#define SIMULATION_TIME ROW_DELAY * ROWS_IN_SCREEN * FRAMES // In nano seconds
+#define SIMULATION_TIME (ROW_DELAY * ROWS_IN_SCREEN * FRAMES) // In nano seconds
 #define H_SYNC_SYNCH_PULSE_LENGTH 96 //In pixels
 #define V_SYNC_SYNCH_PULSE_LENGTH 2  //In rows
 
-#define DEBUG_H_SYNC_SYNCH_PULSE_LENGTH 2
 
 struct adc_simulator : Node {
 
@@ -20,62 +18,13 @@ struct adc_simulator : Node {
     thread_process()
     {
         srand (time(NULL));
+	for(int i = 0; i < (ROWS_IN_SCREEN * PIXELS_IN_ROW); i++){
+	  sc_uint<PACKAGE_LENGTH_IN_BITS> data = 0;
 
-        int column = 0;
-        int row = 0;
-
-        bool hsync;
-        bool vsync;
-        int pixel = 0;
-        sc_uint<PACKAGE_LENGTH_IN_BITS> data = 0;
-
-        // Reset the variables
-        hsync = 1;
-        vsync = 1;
-        data = rand() % (1 << PIXEL_WIDTH);
-        data.range(12, 12) = hsync;
-        data.range(13, 13) = vsync;
-        cout << "ADC: Sending package: 0x" << hex << data << endl;
-        initiator->write(DECODER_ADDRESS, (int)data, tlm::TLM_WRITE_COMMAND);
-        wait(sc_time(PIXEL_DELAY, SC_NS));
-
-#ifdef DEBUG //To be able to run the simulation fast
-        for (int i = 0; i < DEBUG_PIXELS; i ++) {
-            if (column <= DEBUG_H_SYNC_SYNCH_PULSE_LENGTH) { //hsync should be cleared.
-                hsync = 0;
-            } else {
-                hsync = 1;
-            }
-            column++;
-#else
-        for (double simulated_time = 0; simulated_time < SIMULATION_TIME;
-                simulated_time += PIXEL_DELAY) {
-            if (column <= H_SYNC_SYNCH_PULSE_LENGHT) { //hsync should be cleared.
-                hsync = 0;
-            } else {
-                hsync = 1;
-            }
-            if (row <= V_SYNC_SYNCH_PULSE_LENGHT) { //vsync should be cleared.
-                vsync = 0;
-            } else {
-                vsync = 1;
-            }
-            column++;
-            if (column == PIXELS_IN_ROW) { //It's a new row
-                column = 0;
-                row++;
-		if (row == ROWS_IN_FRAME) { //It's a new frame
-		  row = 0;
-		}
-            }
-#endif //DEBUG
-            data = rand() % (1 << PIXEL_WIDTH);
-            data.range(12, 12) = hsync;
-            data.range(13, 13) = vsync;
-            cout << "ADC: Sending 0x" << hex << data << " to " << DECODER_ADDRESS
-                 << " @ " << sc_time_stamp() << endl;
-            initiator->write(DECODER_ADDRESS, (int)data, tlm::TLM_WRITE_COMMAND);
-            wait(sc_time(PIXEL_DELAY, SC_NS));
+	  data = rand() % (1 << PIXEL_WIDTH);
+	  cout << "ADC sending:\t" << data << " @ " << sc_time_stamp() << endl;
+	  initiator->write(DECODER_ADDRESS, (int)data, tlm::TLM_WRITE_COMMAND);
+	  wait(sc_time(PIXEL_DELAY, SC_NS));
         }
     }
 
@@ -86,31 +35,17 @@ struct adc_simulator : Node {
     }
 }; /* End of Module adc_simulator */
 
-struct Memory: Node {
 
-
-#ifdef DEBUG
-    int received_pixels;
-    unsigned short mem[DEBUG_PIXELS + 1];
-#else
-    enum {SIZE = RESOLUTION};
-    unsigned short mem[SIZE];
-#endif
-
-    Memory(const sc_module_name & name) : Node(name)
+struct DummyReceiver : public Node {
+    /* Initialization done by the parent class */
+    DummyReceiver(const sc_module_name & name) : Node(name)
     {
-        for (int i = 0; i < sizeof(mem) / sizeof(mem[0]); i++) {
-            mem[i] = 0x0;
-        }
-#ifdef DEBUG
-        received_pixels = 0;
-#endif
-    } // End of Constructor
+    }
 
     void
     thread_process()
     {
-        /* No writing operations are needed on the memory */
+        /* No writing operations are needed on the dummy receiver */
     }
 
     void
@@ -120,28 +55,28 @@ struct Memory: Node {
             wait(*(incoming_notification));
             unsigned short data = target->incoming_buffer;
 
-            cout << "CPU: Transaction received: 0x" << hex
+            cout << "Dummy Receiver: Transaction received: 0x" << hex
                  << data << endl;
-            mem[received_pixels] = data;
-            received_pixels++;
             wait(sc_time(BUS_DELAY, SC_NS));
         }
     }
-}; //End of Memory module
-
+};
 
 int
 sc_main (int argc, char* argv[])
 {
+    /* Input signal */
+    sc_signal<bool> v_sync;
+    sc_signal<bool> h_sync;
+  
     /* Connect the DUT */
+    Node* adc =  new adc_simulator("ADC"); //
+    vga_decoder* decoder = new vga_decoder("Decoder");
+    Node* cpu = new DummyReceiver("CPU");
 
-    Node* node_ADC =  new adc_simulator("ADC"); //
-    Node* node_decoder = new vga_decoder("Decoder");
-    Node* node_CPU = new Memory("CPU");
-
-    Router adc_router("router0", node_ADC);
-    Router decoder_router("router1", node_decoder);
-    Router cpu_router("router3", node_CPU);
+    Router adc_router("router0", adc);
+    Router decoder_router("router1", decoder);
+    Router cpu_router("router3", cpu);
 
     adc_router.initiator_ring->socket.bind(decoder_router.target_ring->socket);
     decoder_router.initiator_ring->socket.bind(cpu_router.target_ring->socket);
@@ -151,15 +86,28 @@ sc_main (int argc, char* argv[])
     decoder_router.addr = DECODER_ADDRESS;
     cpu_router.addr = CPU_ADDRESS;
 
-    sc_start();
-#ifdef DEBUG
-    for (int i = 0;
-            i < sizeof(((Memory*)node_CPU)->mem) / sizeof(((Memory*)node_CPU)->mem[0]);
-            i++) {
-        cout << "Memory[" << i << "] = " << hex << ((Memory*)node_CPU)->mem[i]
-             << endl;
+    decoder->h_sync(h_sync);
+    decoder->v_sync(v_sync);
+
+    sc_start(0, SC_NS);
+
+    for(int i = 0; i < (ROWS_IN_SCREEN * PIXELS_IN_ROW); i++){
+      if((i % PIXELS_IN_ROW) == 0) { /* Signal new row */
+	h_sync = 1;
+      }
+      else {
+	h_sync = 0;
+      }
+      if((i % (PIXELS_IN_ROW * ROWS_IN_SCREEN)) == 0) { /* Signal new row */
+	v_sync = 1;
+      }
+      else {
+	v_sync = 0;
+      }
+      
+      sc_start(PIXEL_DELAY, SC_NS);
     }
-#endif
+
     cout << "@" << sc_time_stamp() << " Terminating simulation" << endl;
     return 0;
 }  //End of main

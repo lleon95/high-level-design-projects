@@ -13,41 +13,35 @@ UNUSED | V SYNC | H SYNC |           PIXEL            |
 
 #define RESOLUTION (640*480)
 #define PIXEL_WIDTH 12
-
-#define PIXEL_POS 0
-#define H_SYNC_POS 12
-#define V_SYNC_POS 13
-#define GET_PIXEL(DATA) (DATA & 0xFFF)
-#define GET_H_SYNC(DATA) ((DATA & 1 << H_SYNC_POS) >> H_SYNC_POS)
-#define GET_V_SYNC(DATA) ((DATA & 1 << V_SYNC_POS) >> V_SYNC_POS)
-
 #define PIXEL_DELAY  39.722  //This is in nano secs
+#define ROWS_IN_SCREEN 525   // Rows in a screen, not the visible ones
 #define PIXELS_IN_ROW 800
-#define ROWS_IN_FRAME 525
-#define ROW_DELAY (PIXEL_DELAY * PIXELS_IN_ROW) // This is in nano secs
-#define UPDATE_OUTPUT_DELAY 10 //nanoseconds
-#define SAMPLING_DELAY 10 //nanoseconds
-#define ADDRESSABLE_VIDEO_H_START 145
-#define ADDRESSABLE_VIDEO_H_END 784
-#define ADDRESSABLE_VIDEO_V_START 36
-#define ADDRESSABLE_VIDEO_V_END 515
+
+#define GET_PIXEL(DATA) (DATA & 0xFFF)
 
 #define PACKAGE_SIZE_IN_BYTES 2
 #define PACKAGE_LENGTH_IN_BITS (PACKAGE_SIZE_IN_BYTES * 8)
 
+#ifdef DEBUG
 #define DEBUG_PIXELS 5
 #define DEBUG_ADDRESSABLE_VIDEO_H_START 2
 #define DEBUG_MAX_PIXELS_TO_SEND (DEBUG_PIXELS - DEBUG_ADDRESSABLE_VIDEO_H_START + 1)
 
+#define DEBUG_PIXEL_IN_ROW 10
+#define DEBUG_ROWS_IN_FRAME 10
+#define DEBUG_ROW_DELAY (DEBUG_PIXEL_IN_ROW * PIXEL_DELAY)
+#endif /* DEBUG */
+
 struct vga_decoder : Node {
+    /* I/O signals */
+    sc_in<bool> h_sync;
+    sc_in<bool> v_sync;
 
     //-----------Internal variables-------------------
     short pixel_in;
     short pixel;
     bool previous_h_sync;
-    bool current_h_sync;
     bool previous_v_sync;
-    bool current_v_sync;
 
     int h_count, v_count;        // Count for the column and row.
 #ifdef DEBUG
@@ -84,9 +78,7 @@ struct vga_decoder : Node {
 #endif
 
         previous_h_sync = 1;
-        current_h_sync  = 1;
         previous_v_sync = 1;
-        current_v_sync  = 1;
 
         SC_THREAD(decode_pixel);
         SC_THREAD(column_count);
