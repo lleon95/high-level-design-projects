@@ -21,8 +21,8 @@ struct adc_simulator : Node {
     {
         srand (time(NULL));
 
-        int column = 1;
-        int row = 1;
+        int column = 0;
+        int row = 0;
 
         bool hsync;
         bool vsync;
@@ -32,11 +32,11 @@ struct adc_simulator : Node {
         // Reset the variables
         hsync = 1;
         vsync = 1;
-        data = rand() % MAX_PIXEL_VALUE_PLUS_ONE;
+        data = rand() % (1 << PIXEL_WIDTH);
         data.range(12, 12) = hsync;
         data.range(13, 13) = vsync;
         cout << "ADC: Sending package: 0x" << hex << data << endl;
-        initiator->write(DECODER_ADDRESS - 1, (int)data, tlm::TLM_WRITE_COMMAND);
+        initiator->write(DECODER_ADDRESS, (int)data, tlm::TLM_WRITE_COMMAND);
         wait(sc_time(PIXEL_DELAY, SC_NS));
 
 #ifdef DEBUG //To be able to run the simulation fast
@@ -47,14 +47,6 @@ struct adc_simulator : Node {
                 hsync = 1;
             }
             column++;
-
-            data = rand() % (MAX_PIXEL_VALUE_PLUS_ONE);
-            data.range(12, 12) = hsync;
-            data.range(13, 13) = vsync;
-            cout << "ADC: Sending package: 0x" << hex << data << endl;
-            initiator->write(DECODER_ADDRESS - 1, (int)data, tlm::TLM_WRITE_COMMAND);
-            wait(sc_time(PIXEL_DELAY, SC_NS));
-        }
 #else
         for (double simulated_time = 0; simulated_time < SIMULATION_TIME;
                 simulated_time += PIXEL_DELAY) {
@@ -69,23 +61,22 @@ struct adc_simulator : Node {
                 vsync = 1;
             }
             column++;
-            if (column == PIXELS_IN_ROW + 1) { //It's a new row
-                column = 1;
+            if (column == PIXELS_IN_ROW) { //It's a new row
+                column = 0;
                 row++;
+		if (row == ROWS_IN_FRAME) { //It's a new frame
+		  row = 0;
+		}
             }
-            if (row == ROWS_IN_FRAME + 1) { //It's a new frame
-                row = 1;
-            }
-
-            data = rand() % (MAX_PIXEL_VALUE_PLUS_ONE);
+#endif //DEBUG
+            data = rand() % (1 << PIXEL_WIDTH);
             data.range(12, 12) = hsync;
             data.range(13, 13) = vsync;
             cout << "ADC: Sending 0x" << hex << data << " to " << DECODER_ADDRESS
                  << " @ " << sc_time_stamp() << endl;
-            initiator->write(DECODER_ADDRESS - 1, (int)data, tlm::TLM_WRITE_COMMAND);
+            initiator->write(DECODER_ADDRESS, (int)data, tlm::TLM_WRITE_COMMAND);
             wait(sc_time(PIXEL_DELAY, SC_NS));
         }
-#endif //DEBUG
     }
 
     void
@@ -145,11 +136,8 @@ sc_main (int argc, char* argv[])
     /* Connect the DUT */
 
     Node* node_ADC =  new adc_simulator("ADC"); //
-    node_ADC->addr = ADC_ADDRESS;
     Node* node_decoder = new vga_decoder("Decoder");
-    node_decoder->addr = DECODER_ADDRESS;
     Node* node_CPU = new Memory("CPU");
-    node_CPU->addr = CPU_ADDRESS;
 
     Router adc_router("router0", node_ADC);
     Router decoder_router("router1", node_decoder);

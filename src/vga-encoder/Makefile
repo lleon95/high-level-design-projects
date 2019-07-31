@@ -5,7 +5,7 @@ CXXFLAGS=-Wall -Wextra
 INCLUDES=-I../router/
 
 MODULE=vga-encoder
-SOURCES=$(MODULE).cpp $(MODULE)-tbb.cpp ../router/router.cpp
+SOURCES=$(MODULE).cpp $(MODULE)-tbb.cpp ../router/router.cpp ../router/communication.cpp
 
 all: $(MODULE)
 

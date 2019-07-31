@@ -12,17 +12,19 @@ sc_main(int argc, char* argv[])
     Node* node4 = new DummyNode("node4");
     Node* node5 = new DummyNode("node5");
 
-    node1->addr = ADC_ADDRESS;
-    node2->addr = DECODER_ADDRESS;
-    node3->addr = CPU_ADDRESS;
-    node4->addr = ENCODE_ADDRESS;
-    node5->addr = DAC_ADDRESS;
-
     Router router1("router1", node1);
     Router router2("router2", node2);
     Router router3("router3", node3);
     Router router4("router4", node4);
     Router router5("router5", node5);
+
+    router1.addr = ADC_ADDRESS;
+    router2.addr = DECODER_ADDRESS;
+    router3.addr = CPU_ADDRESS;
+    router4.addr = ENCODER_ADDRESS;
+    router5.addr = DAC_ADDRESS;
+
+    cout << ADC_ADDRESS << DECODER_ADDRESS << CPU_ADDRESS << ENCODER_ADDRESS << DAC_ADDRESS << MAX_ADDRESS;
 
     /* Binding - Ring */
     router1.initiator_ring->socket.bind(router2.target_ring->socket);

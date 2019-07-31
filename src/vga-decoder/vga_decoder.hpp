@@ -12,8 +12,7 @@ UNUSED | V SYNC | H SYNC |           PIXEL            |
 */
 
 #define RESOLUTION (640*480)
-#define PIXEL_SIZE 12
-#define MAX_PIXEL_VALUE_PLUS_ONE (1 << PIXEL_SIZE)
+#define PIXEL_WIDTH 12
 
 #define PIXEL_POS 0
 #define H_SYNC_POS 12

@@ -77,8 +77,6 @@ process_pixel(int input_pixels, int pixel_buffer[], int pixel_index)
     /* Convert pixel to gray and save to buffer */
     pixel_buffer[(pixel_index % BUFFER_SIZE)] = rgb12_to_gray( input_pixels );
 
-    //printf("emma tbb: pixel_buffer[%d] = %x\n\n", (index % BUFFER_SIZE), (int)pixel_buffer[(index % BUFFER_SIZE)]);
-
     /* Copy pixels to window buffer */
     for (int i = 0; i < 3; i++) {
         for( int j = 0; j < 3; j++) {
@@ -105,13 +103,11 @@ struct DummySender : public Node {
     thread_process()
     {
         int pixel_error;
-        for (int j = 0; j < 7; j++) {
-            //for (int j = 0; j < HEIGHT; j++) {
+	for (int j = 0; j < HEIGHT; j++) {
             for (int i = 0; i < WIDTH; i++) {
                 random_pixel = rand() % ( 1 << PIXEL_WIDTH );
 
-                wait(sc_time(BUS_DELAY, SC_NS));
-
+                cout << "DummySender sending:\t" << random_pixel << " @ " << sc_time_stamp() << endl;
                 initiator->write(CPU_ADDRESS, random_pixel, tlm::TLM_WRITE_COMMAND);
 
                 /* Don't process another pixel until result can be tested */
@@ -159,8 +155,8 @@ struct DummyReceiver : public Node {
             wait(*(incoming_notification));
             bool command = target->command;
             unsigned short data = target->incoming_buffer;
-            wait(sc_time(BUS_DELAY, SC_NS));
-
+            cout << "DummyReceiver received:\t" << data << " @ " << sc_time_stamp() << endl;
+	    
             /* Transfer to the next */
             if(command == tlm::TLM_WRITE_COMMAND) {
                 sysc_result = (int) data;
@@ -174,20 +170,25 @@ int
 sc_main (int argc, char* argv[])
 {
     /* Connect the DUT */
-    Node* encoder = new DummySender("encoder");
-    encoder->addr = ENCODER_ADDRESS;
+    Node* decoder = new DummySender("decoder");
     Node* cpu =  new image_processor("SOBEL"); //
-    cpu->addr = CPU_ADDRESS;
-    Node* decoder = new DummyReceiver("decoder");
-    decoder->addr = DECODER_ADDRESS;
+    Node* encoder = new DummyReceiver("encoder");
 
-    Router encoder_router("router1", encoder);
-    Router cpu_router("router2", cpu);
-    Router decoder_router("router3", decoder);
+    Router decoder_router("decoder_router", decoder);
+    Router cpu_router("cpu_router", cpu);
+    Router encoder_router("encoder_router", encoder);
+    
+    decoder_router.addr = DECODER_ADDRESS;
+    cpu_router.addr = CPU_ADDRESS;
+    encoder_router.addr = ENCODER_ADDRESS;
 
-    encoder_router.initiator_ring->socket.bind(cpu_router.target_ring->socket);
-    cpu_router.initiator_ring->socket.bind(decoder_router.target_ring->socket);
-    decoder_router.initiator_ring->socket.bind(encoder_router.target_ring->socket);
+    cout << decoder_router.addr << endl;
+    cout << cpu_router.addr << endl;
+    cout << encoder_router.addr << endl;
+
+    decoder_router.initiator_ring->socket.bind(cpu_router.target_ring->socket);
+    cpu_router.initiator_ring->socket.bind(encoder_router.target_ring->socket);
+    encoder_router.initiator_ring->socket.bind(decoder_router.target_ring->socket);
 
     for(int i = 0; i < BUFFER_SIZE; i++) {
         pixel_buffer[i] = 0;
