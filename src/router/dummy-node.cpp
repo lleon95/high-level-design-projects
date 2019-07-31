@@ -5,8 +5,10 @@ DummyNode::thread_process()
 {
 
     for(int i = 0; i < DUMMY_PACKAGES; i++) {
+        unsigned short data = 0xdf & i + 0xd0;
+        initiator->write(7, data, rand() % 2);
+        cout << "Dummy write:\t" << data << " @ " << sc_time_stamp() << endl;
         wait(update_event);
-        initiator->write(i, 0xdf & rand() % 15, rand() % 2);
     }
 
 }
@@ -24,6 +26,6 @@ DummyNode::reading_process()
             cout << "Dummy received:\t" << data << " @ " << sc_time_stamp() << endl;
         }
 
-        update_event.notify
+        update_event.notify();
     }
 }
