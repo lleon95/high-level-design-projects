@@ -40,7 +40,7 @@ vga_decoder::decode_pixel()
                  (v_count <= ADDRESSABLE_VIDEO_V_END))) {
             if (pixels_transmitted < DEBUG_MAX_PIXELS_TO_SEND) {
                 sample_pixel_event.notify(SAMPLING_DELAY, SC_NS);
-	    }
+            }
         }
     }
 }

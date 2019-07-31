@@ -18,19 +18,24 @@ using namespace std;
 
 /* Generic Payload Extension for ID */
 struct ID_extension: tlm::tlm_extension<ID_extension> {
-  unsigned int transaction_id;
-  ID_extension(int id) : transaction_id(0) {
-    this->transaction_id = id;
-  }
-  ID_extension() : transaction_id(0) {}
-  virtual tlm_extension_base* clone() const { // Must override pure virtual clone method
-    ID_extension* t = new ID_extension;
-    t->transaction_id = this->transaction_id;
-    return t;
-  }
-  virtual void copy_from(tlm_extension_base const &ext) {
-    transaction_id = static_cast<ID_extension const &>(ext).transaction_id;
-  }
+    unsigned int transaction_id;
+    ID_extension(int id) : transaction_id(0)
+    {
+        this->transaction_id = id;
+    }
+    ID_extension() : transaction_id(0) {}
+    virtual tlm_extension_base*
+    clone() const   // Must override pure virtual clone method
+    {
+        ID_extension* t = new ID_extension;
+        t->transaction_id = this->transaction_id;
+        return t;
+    }
+    virtual void
+    copy_from(tlm_extension_base const &ext)
+    {
+        transaction_id = static_cast<ID_extension const &>(ext).transaction_id;
+    }
 };
 
 static ID_extension* id_extension = new ID_extension;
@@ -39,7 +44,9 @@ static ID_extension* id_extension = new ID_extension;
   Initiator
  */
 
-void Initiator::write(int adr, int datum, bool cmd, int old_id) {
+void
+Initiator::write(int adr, int datum, bool cmd, int old_id)
+{
     queue_element new_transaction;
     new_transaction.address = adr;
     new_transaction.cmd = cmd;
@@ -50,63 +57,66 @@ void Initiator::write(int adr, int datum, bool cmd, int old_id) {
     initiator_queue.push(new_transaction);
 
     write_req.notify();
-  }
+}
 
-void Initiator::thread_process()
-  {
+void
+Initiator::thread_process()
+{
     tlm::tlm_phase phase;
     sc_time delay = sc_time(BUS_DELAY, SC_NS);;
-    
+
 
     while(true) {
-      wait(write_req);
-      
-      while(!initiator_queue.empty()) {
-        /* Create new transaction */
-        tlm::tlm_generic_payload* trans = new tlm::tlm_generic_payload;
+        wait(write_req);
 
-        /* Unqueue next transaction */
-        queue_element next_transaction = initiator_queue.front();
-        initiator_queue.pop();
-        int adr = next_transaction.address;
-        unsigned short * data = next_transaction.datum;
-        tlm::tlm_command cmd = 
-            static_cast<tlm::tlm_command>(next_transaction.cmd);
-	int id = next_transaction.id;
+        while(!initiator_queue.empty()) {
+            /* Create new transaction */
+            tlm::tlm_generic_payload* trans = new tlm::tlm_generic_payload;
 
-	ID_extension* id_extension_tlm = new ID_extension(id);
-	trans->set_extension( id_extension_tlm );
-	        
-        /* Build the transaction */
-        trans->set_command( cmd );
-        trans->set_address( adr );
-        trans->set_data_ptr( reinterpret_cast<unsigned char*>(data) );
-        trans->set_data_length( BUS_WIDTH/8 );
-        trans->set_streaming_width( BUS_WIDTH/8 ); 
-        trans->set_byte_enable_ptr( 0 ); 
-        trans->set_dmi_allowed( false );
-        trans->set_response_status( tlm::TLM_INCOMPLETE_RESPONSE );
+            /* Unqueue next transaction */
+            queue_element next_transaction = initiator_queue.front();
+            initiator_queue.pop();
+            int adr = next_transaction.address;
+            unsigned short * data = next_transaction.datum;
+            tlm::tlm_command cmd =
+                static_cast<tlm::tlm_command>(next_transaction.cmd);
+            int id = next_transaction.id;
 
-        /* Blocking call */
-        socket->b_transport( *trans, delay );
+            ID_extension* id_extension_tlm = new ID_extension(id);
+            trans->set_extension( id_extension_tlm );
 
-        /* Check response */
-        if ( trans->is_response_error() )
-          SC_REPORT_ERROR("TLM-2", "Response error from b_transport");
+            /* Build the transaction */
+            trans->set_command( cmd );
+            trans->set_address( adr );
+            trans->set_data_ptr( reinterpret_cast<unsigned char*>(data) );
+            trans->set_data_length( BUS_WIDTH / 8 );
+            trans->set_streaming_width( BUS_WIDTH / 8 );
+            trans->set_byte_enable_ptr( 0 );
+            trans->set_dmi_allowed( false );
+            trans->set_response_status( tlm::TLM_INCOMPLETE_RESPONSE );
 
-        /* Bus delay for next transaction */
-        wait(delay);
-        id_extension->transaction_id++;
-      }
+            /* Blocking call */
+            socket->b_transport( *trans, delay );
+
+            /* Check response */
+            if ( trans->is_response_error() ) {
+                SC_REPORT_ERROR("TLM-2", "Response error from b_transport");
+            }
+
+            /* Bus delay for next transaction */
+            wait(delay);
+            id_extension->transaction_id++;
+        }
 
     }
-  }
+}
 
 /*
   Target
  */
-void Target::b_transport( tlm::tlm_generic_payload& trans, sc_time& delay )
-  {
+void
+Target::b_transport( tlm::tlm_generic_payload& trans, sc_time& delay )
+{
     tlm::tlm_command tlm_cmd = trans.get_command();
     sc_uint<ADDRESS_WIDTH> adr = trans.get_address();
     unsigned char* ptr = trans.get_data_ptr();
@@ -114,11 +124,13 @@ void Target::b_transport( tlm::tlm_generic_payload& trans, sc_time& delay )
     unsigned char* byt = trans.get_byte_enable_ptr();
     unsigned int wid = trans.get_streaming_width();
     ID_extension* id_extension_tlm = new ID_extension;
-    trans.get_extension( id_extension_tlm ); 
+    trans.get_extension( id_extension_tlm );
 
     /* Check */
-    if (byt != 0 || len > 4 || wid < len)
-      SC_REPORT_ERROR("TLM-2", "Target does not support given generic payload transaction");
+    if (byt != 0 || len > 4 || wid < len) {
+        SC_REPORT_ERROR("TLM-2",
+                        "Target does not support given generic payload transaction");
+    }
 
     /* Write back */
     incoming_buffer = (*reinterpret_cast<int*>(ptr));
@@ -136,4 +148,4 @@ void Target::b_transport( tlm::tlm_generic_payload& trans, sc_time& delay )
 
     /* FIXME */
     /* trans->release(); */
-  }
+}

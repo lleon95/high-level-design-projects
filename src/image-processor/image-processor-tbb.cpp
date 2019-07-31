@@ -103,11 +103,12 @@ struct DummySender : public Node {
     thread_process()
     {
         int pixel_error;
-	for (int j = 0; j < HEIGHT; j++) {
+        for (int j = 0; j < HEIGHT; j++) {
             for (int i = 0; i < WIDTH; i++) {
                 random_pixel = rand() % ( 1 << PIXEL_WIDTH );
 
-                cout << "DummySender sending:\t" << random_pixel << " @ " << sc_time_stamp() << endl;
+                cout << "DummySender sending:\t" << random_pixel << " @ " << sc_time_stamp() <<
+                     endl;
                 initiator->write(CPU_ADDRESS, random_pixel, tlm::TLM_WRITE_COMMAND);
 
                 /* Don't process another pixel until result can be tested */
@@ -156,7 +157,7 @@ struct DummyReceiver : public Node {
             bool command = target->command;
             unsigned short data = target->incoming_buffer;
             cout << "DummyReceiver received:\t" << data << " @ " << sc_time_stamp() << endl;
-	    
+
             /* Transfer to the next */
             if(command == tlm::TLM_WRITE_COMMAND) {
                 sysc_result = (int) data;
@@ -177,7 +178,7 @@ sc_main (int argc, char* argv[])
     Router decoder_router("decoder_router", decoder);
     Router cpu_router("cpu_router", cpu);
     Router encoder_router("encoder_router", encoder);
-    
+
     decoder_router.addr = DECODER_ADDRESS;
     cpu_router.addr = CPU_ADDRESS;
     encoder_router.addr = ENCODER_ADDRESS;

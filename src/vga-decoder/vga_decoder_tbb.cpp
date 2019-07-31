@@ -18,13 +18,13 @@ struct adc_simulator : Node {
     thread_process()
     {
         srand (time(NULL));
-	for(int i = 0; i < (ROWS_IN_SCREEN * PIXELS_IN_ROW); i++){
-	  sc_uint<PACKAGE_LENGTH_IN_BITS> data = 0;
+        for(int i = 0; i < (ROWS_IN_SCREEN * PIXELS_IN_ROW); i++) {
+            sc_uint<PACKAGE_LENGTH_IN_BITS> data = 0;
 
-	  data = rand() % (1 << PIXEL_WIDTH);
-	  cout << "ADC sending:\t" << data << " @ " << sc_time_stamp() << endl;
-	  initiator->write(DECODER_ADDRESS, (int)data, tlm::TLM_WRITE_COMMAND);
-	  wait(sc_time(PIXEL_DELAY, SC_NS));
+            data = rand() % (1 << PIXEL_WIDTH);
+            cout << "ADC sending:\t" << data << " @ " << sc_time_stamp() << endl;
+            initiator->write(DECODER_ADDRESS, (int)data, tlm::TLM_WRITE_COMMAND);
+            wait(sc_time(PIXEL_DELAY, SC_NS));
         }
     }
 
@@ -68,7 +68,7 @@ sc_main (int argc, char* argv[])
     /* Input signal */
     sc_signal<bool> v_sync;
     sc_signal<bool> h_sync;
-  
+
     /* Connect the DUT */
     Node* adc =  new adc_simulator("ADC"); //
     vga_decoder* decoder = new vga_decoder("Decoder");
@@ -91,21 +91,19 @@ sc_main (int argc, char* argv[])
 
     sc_start(0, SC_NS);
 
-    for(int i = 0; i < (ROWS_IN_SCREEN * PIXELS_IN_ROW); i++){
-      if((i % PIXELS_IN_ROW) == 0) { /* Signal new row */
-	h_sync = 1;
-      }
-      else {
-	h_sync = 0;
-      }
-      if((i % (PIXELS_IN_ROW * ROWS_IN_SCREEN)) == 0) { /* Signal new row */
-	v_sync = 1;
-      }
-      else {
-	v_sync = 0;
-      }
-      
-      sc_start(PIXEL_DELAY, SC_NS);
+    for(int i = 0; i < (ROWS_IN_SCREEN * PIXELS_IN_ROW); i++) {
+        if((i % PIXELS_IN_ROW) == 0) { /* Signal new row */
+            h_sync = 1;
+        } else {
+            h_sync = 0;
+        }
+        if((i % (PIXELS_IN_ROW * ROWS_IN_SCREEN)) == 0) { /* Signal new row */
+            v_sync = 1;
+        } else {
+            v_sync = 0;
+        }
+
+        sc_start(PIXEL_DELAY, SC_NS);
     }
 
     cout << "@" << sc_time_stamp() << " Terminating simulation" << endl;

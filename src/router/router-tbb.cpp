@@ -24,7 +24,8 @@ sc_main(int argc, char* argv[])
     router4.addr = ENCODER_ADDRESS;
     router5.addr = DAC_ADDRESS;
 
-    cout << ADC_ADDRESS << DECODER_ADDRESS << CPU_ADDRESS << ENCODER_ADDRESS << DAC_ADDRESS << MAX_ADDRESS;
+    cout << ADC_ADDRESS << DECODER_ADDRESS << CPU_ADDRESS << ENCODER_ADDRESS <<
+         DAC_ADDRESS << MAX_ADDRESS;
 
     /* Binding - Ring */
     router1.initiator_ring->socket.bind(router2.target_ring->socket);

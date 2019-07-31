@@ -59,7 +59,7 @@ sc_main (int argc, char* argv[])
         red_channel.write(rand() % (1 << CHANNEL_WIDTH));
         green_channel.write(rand() % (1 << CHANNEL_WIDTH));
         blue_channel.write(rand() % (1 << CHANNEL_WIDTH));
-	cout << "changed value@ " << sc_time_stamp()  << endl;
+        cout << "changed value@ " << sc_time_stamp()  << endl;
         sc_start(PIXEL_DELAY, SC_NS);
     }
 

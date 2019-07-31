@@ -27,7 +27,7 @@ Router::Router(sc_module_name name_, Node* _node)  : sc_module(name_)
 }
 
 static int global_id_counter = 0;
- 
+
 void
 Router::reading_process_node()
 {
@@ -75,7 +75,8 @@ Router::reading_process_ring()
             initiator_ring->write(destination, data, command, id);
             cout << "Retransmitted to: " << (addr + 1) % (DAC_ADDRESS + 1)  << endl;
         } else {
-            initiator_node->write(MAX_ADDRESS, data, command, id); /* 0 is the connected node */
+            initiator_node->write(MAX_ADDRESS, data, command,
+                                  id); /* 0 is the connected node */
             cout << "Received by: " << addr << endl;
         }
     }
