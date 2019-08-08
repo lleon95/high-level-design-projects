@@ -16,21 +16,22 @@
 struct digital_analog_converter : Node
 {
     /* I/O */
-    sc_out<sc_uint<CHANNEL_WIDTH> > red_channel;
-    sc_out<sc_uint<CHANNEL_WIDTH> > green_channel;
-    sc_out<sc_uint<CHANNEL_WIDTH> > blue_channel;
     sc_uint<PIXEL_WIDTH> pixel;
+    sca_eln::sca_node sigOutput;
 
     /* Events */
     sc_event wr_t;
 
     SC_HAS_PROCESS(digital_analog_converter);
     digital_analog_converter(const sc_module_name & name) : Node(name) {
+      
     }
 
     /* Control units */
     void thread_process();
     void reading_process();
+
+    void update_process();
 
     /* Data path */
     void put_rgb_signal();
