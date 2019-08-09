@@ -1,6 +1,6 @@
 SYSTEMC_HOME=/opt/systemc
 GCC=g++
-LDFLAGS= -lsystemc
+LD_LIBRARY_PATH=$SYSTEMC_HOME/lib-linux64/
 CXXFLAGS=-Wall -Wextra
 INCLUDES=-I../router/
 
