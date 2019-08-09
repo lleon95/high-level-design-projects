@@ -90,27 +90,27 @@ digital_iface::write_analog ()
 {
     sc_uint<4> val_in = in.read();
     if(val_in[0] == 1) {
-        double_wire_0.write(5);
+        double_wire_0.write(ON_V);
     } else {
-        double_wire_0.write(0);
+        double_wire_0.write(OFF_V);
     }
 
     if(val_in[1] == 1) {
-        double_wire_1.write(5);
+        double_wire_1.write(ON_V);
     } else {
-        double_wire_1.write(0);
+        double_wire_1.write(OFF_V);
     }
 
     if(val_in[2] == 1) {
-        double_wire_2.write(5);
+        double_wire_2.write(ON_V);
     } else {
-        double_wire_2.write(0);
+        double_wire_2.write(OFF_V);
     }
 
     if(val_in[3] == 1) {
-        double_wire_3.write(5);
+        double_wire_3.write(ON_V);
     } else {
-        double_wire_3.write(0);
+        double_wire_3.write(OFF_V);
     }
 }
 

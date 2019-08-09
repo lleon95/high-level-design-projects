@@ -13,6 +13,8 @@
 #include <systemc-ams>
 
 #define R_REF 1000
+#define ON_V 5
+#define OFF_V 0
 
 SC_MODULE (fourbit_dac){
   sca_eln::sca_terminal vbit0, vbit1, vbit2, vbit3, vout;
