@@ -1,5 +1,5 @@
 #include "systemc.h"
-
+#include <systemc-ams>
 #include "dac.hpp"
 #include "router.hpp"
 
@@ -61,26 +61,27 @@ struct DummyReceiver : public Node {
 int
 sc_main (int argc, char* argv[])
 {
-    sc_signal<sc_uint<CHANNEL_WIDTH> > red_channel;
-    sc_signal<sc_uint<CHANNEL_WIDTH> > green_channel;
-    sc_signal<sc_uint<CHANNEL_WIDTH> > blue_channel;
+    sca_eln::sca_node red_channel;
+    sca_eln::sca_node green_channel;
+    sca_eln::sca_node blue_channel;
 
     Node* encoder = new DummySender("encoder");
     digital_analog_converter* dut_dac =  new digital_analog_converter("DAC"); //
     Node* decoder = new DummyReceiver("decoder");
 
     /* Output */
-    dut_dac->red_channel(red_channel);
-    dut_dac->green_channel(green_channel);
-    dut_dac->blue_channel(blue_channel);
+    dut_dac->r_channel(red_channel);
+    dut_dac->g_channel(green_channel);
+    dut_dac->b_channel(blue_channel);
     dut_wr_t = &(dut_dac->wr_t);
 
     /* Log file */
-    sc_trace_file *wf = sc_create_vcd_trace_file("dac");
-    sc_trace(wf, red_channel, "red_channel");
-    sc_trace(wf, green_channel, "green_channel");
-    sc_trace(wf, blue_channel, "blue_channel");
-    sc_trace(wf, c_result, "pixel_in");
+    sca_util::sca_trace_file *eln =
+    sca_util::sca_create_vcd_trace_file("dac4bit.vcd");
+    //sca_trace(eln, dut_dac->pixel, "uint_in");
+    sca_trace(eln, red_channel, "red_channel");
+    sca_trace(eln, green_channel, "green_channel");
+    sca_trace(eln, blue_channel, "blue_channel");
 
     /* Connect the DUT */
     Router encoder_router("router1", encoder);
@@ -101,7 +102,7 @@ sc_main (int argc, char* argv[])
 
     /* Terminate */
     cout << "@" << sc_time_stamp() << " Terminating simulation\n" << endl;
-    sc_close_vcd_trace_file(wf);
+    sca_util::sca_close_vcd_trace_file(eln);
     return 0;
 }
 

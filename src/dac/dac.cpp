@@ -13,7 +13,7 @@ digital_analog_converter::reading_process()
         wait(sc_time(BUS_DELAY, SC_NS));
 
         if(command == tlm::TLM_WRITE_COMMAND) {
-            pixel = (sc_uint<PIXEL_WIDTH>)(data & 0xFFF);
+            pixel.write((sc_uint<PIXEL_WIDTH>)(data & 0xFFF));
 #ifdef TRANSACTION_PRINT
             cout << "DAC received:\t" << data << " @ " << sc_time_stamp() << endl;
 #endif /* TRANSACTION_PRINT*/
@@ -28,9 +28,9 @@ digital_analog_converter::thread_process()
 {
     while(true) {
         wait(wr_t);
-        red_channel.write(pixel(3 * CHANNEL_WIDTH - 1, 2 * CHANNEL_WIDTH));
-        green_channel.write(pixel(2 * CHANNEL_WIDTH - 1, CHANNEL_WIDTH));
-        blue_channel.write(pixel(CHANNEL_WIDTH - 1, 0));
+        r_in.write(pixel.read().range(3 * CHANNEL_WIDTH - 1, 2 * CHANNEL_WIDTH));
+        g_in.write(pixel.read().range(2 * CHANNEL_WIDTH - 1, CHANNEL_WIDTH));
+        b_in.write(pixel.read().range(CHANNEL_WIDTH - 1, 0));
     }
 }
 
