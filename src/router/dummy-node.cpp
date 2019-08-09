@@ -3,12 +3,10 @@
 void
 DummyNode::thread_process()
 {
-
-    /* FIXME - Put your tasks here */
     target->module_address = addr;
-    for(int i = 0; i < NODES; i++) {
+    for(int i = 0; i < MAX_ADDRESS; i++) {
         wait(sc_time(BUS_DELAY, SC_NS));
-        initiator->write(i, 16 * i + 1, rand() % 2);
+        initiator->write(i, rand(), rand() % 2);
     }
 
 }

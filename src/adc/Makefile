@@ -5,7 +5,7 @@ CXXFLAGS=-Wall -Wextra
 DEFINES=-DDEBUG
 
 MODULE=adc
-SOURCES=$(MODULE).cpp $(MODULE)_tbb.cpp ../router/router.cpp
+SOURCES=$(MODULE).cpp $(MODULE)_tbb.cpp ../router/router.cpp ../router/communication.cpp
 INCLUDES=-I../router/
 
 

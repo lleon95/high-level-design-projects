@@ -2,34 +2,6 @@
 #include "adc.hpp"
 #include "router.hpp"
 
-#define TRANSACTIONS_TO_SEND 1
-
-struct DummySender : public Node {
-    /* Initialized in parent class */
-    DummySender(const sc_module_name & name) : Node(name)
-    {
-    }
-
-    void
-    thread_process()
-    {
-        srand (time(NULL));
-        int pixel = 0;
-        for (int i = 0; i < TRANSACTIONS_TO_SEND; i++) {
-            pixel = rand() % MAX_PIXEL_VALUE_PLUS_ONE;
-            cout << "Sending 0x" << hex << pixel << " to ADC" << endl;
-            initiator->write(ADC_ADDRESS, pixel, tlm::TLM_WRITE_COMMAND);
-            wait(sc_time(BUS_DELAY, SC_NS));
-        }
-    }
-
-    void
-    reading_process()
-    {
-        /* No reading operations are needed on the dummy sender */
-    }
-};
-
 struct DummyReceiver : public Node {
     /* Initialization done by the parent class */
     DummyReceiver(const sc_module_name & name) : Node(name)
@@ -59,28 +31,38 @@ struct DummyReceiver : public Node {
 int
 sc_main (int argc, char* argv[])
 {
-    /* Connect the DUT */
+    sc_signal<sc_uint<CHANNEL_WIDTH> > red_channel;
+    sc_signal<sc_uint<CHANNEL_WIDTH> > green_channel;
+    sc_signal<sc_uint<CHANNEL_WIDTH> > blue_channel;
 
-    Node* node_ADC =  new analogic_digital_converter("ADC"); //
-    node_ADC->addr = ADC_ADDRESS;
+    /* Connect the DUT */
+    analogic_digital_converter* node_ADC =  new
+    analogic_digital_converter("ADC"); //
     Node* node_decoder = new DummyReceiver("decoder");
-    node_decoder->addr = DECODER_ADDRESS;
-    Node* node_encoder = new DummySender("encoder");
-    node_encoder->addr = ENCODER_ADDRESS;
+
+    node_ADC->red_channel(red_channel);
+    node_ADC->green_channel(green_channel);
+    node_ADC->blue_channel(blue_channel);
 
     Router adc_router("router0", node_ADC);
     Router decoder_router("router1", node_decoder);
-    Router encoder_router("router3", node_encoder);
+
+    srand (time(NULL));
 
     adc_router.initiator_ring->socket.bind(decoder_router.target_ring->socket);
-    decoder_router.initiator_ring->socket.bind(encoder_router.target_ring->socket);
-    encoder_router.initiator_ring->socket.bind(adc_router.target_ring->socket);
+    decoder_router.initiator_ring->socket.bind(adc_router.target_ring->socket);
 
     adc_router.addr = ADC_ADDRESS;
     decoder_router.addr = DECODER_ADDRESS;
-    encoder_router.addr = ENCODER_ADDRESS;
 
-    sc_start();
+    for(int i = 0; i < DEBUG_PIXELS; i++) {
+        red_channel.write(rand() % (1 << CHANNEL_WIDTH));
+        green_channel.write(rand() % (1 << CHANNEL_WIDTH));
+        blue_channel.write(rand() % (1 << CHANNEL_WIDTH));
+        cout << "changed value@ " << sc_time_stamp()  << endl;
+        sc_start(PIXEL_DELAY, SC_NS);
+    }
+
     cout << "@" << sc_time_stamp() << " Terminating simulation" << endl;
     return 0;
 }  //End of main

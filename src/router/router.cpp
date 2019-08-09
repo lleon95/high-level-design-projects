@@ -18,7 +18,7 @@ Router::Router(sc_module_name name_, Node* _node)  : sc_module(name_)
     incoming_notification_ring = &(target_ring->new_package);
 
     /* Interconnect internals */
-    node->addr = 0; /* Node interconnected to router */
+    node->addr = MAX_ADDRESS; /* Node interconnected to router */
     node->initiator->socket.bind(target_node->socket);
     initiator_node->socket.bind(node->target->socket);
 
@@ -27,7 +27,6 @@ Router::Router(sc_module_name name_, Node* _node)  : sc_module(name_)
 }
 
 static int global_id_counter = 0;
-
 
 void
 Router::reading_process_node()
@@ -41,16 +40,19 @@ Router::reading_process_node()
         int id = global_id_counter++;
         wait(sc_time(BUS_DELAY, SC_NS));
 
+#ifdef TRANSACTION_PRINT
         cout << "ID: " << id << "\t";
 
         cout << "Node-> Destination address: " <<  destination
              << " Me: " << addr << " Action - Transfer: "
              << transfer_next << " Data: "
              << data << " Command: " << command << endl;
-
+	
+        cout << "Retransmitted to: " << addr + 1 << endl;
+#endif /* TRANSCTION_PRINT */
+	
         /* Transfer to the next */
         initiator_ring->write(destination, data, command, id);
-        cout << "Retransmitted to: " << addr + 1 << endl;
     }
 }
 
@@ -65,19 +67,26 @@ Router::reading_process_ring()
         int id = target_ring->id_extension;
         wait(sc_time(BUS_DELAY, SC_NS));
 
+#ifdef TRANSACTION_PRINT
         cout << "ID: " << id << "\t";
 
         cout << "Ring-> Destination address: " <<  destination
              << " Me: " << addr << " Data: "
              << data << " Command: " << command << endl;
+#endif /* TRANSCTION_PRINT */
 
         /* Transfer to the next */
         if(addr != destination) {
             initiator_ring->write(destination, data, command, id);
+#ifdef TRANSACTION_PRINT
             cout << "Retransmitted to: " << (addr + 1) % (DAC_ADDRESS + 1)  << endl;
+#endif /* TRANSCTION_PRINT */
         } else {
-            initiator_node->write(0, data, command, id); /* 0 is the connected node */
+            initiator_node->write(MAX_ADDRESS, data, command,
+                                  id); /* 0 is the connected node */
+#ifdef TRANSACTION_PRINT
             cout << "Received by: " << addr << endl;
+#endif /* TRANSCTION_PRINT */
         }
     }
 }
