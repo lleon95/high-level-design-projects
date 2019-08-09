@@ -15,23 +15,36 @@
 #define R_REF 1000
 
 SC_MODULE (fourbit_dac){
-  sca_eln::sca_terminal vin, vout;
+  sca_eln::sca_terminal vbit0, vbit1, vbit2, vbit3, vout;
 
-  SC_CTOR(fourbit_dac): vin("vin"), vout("vout"), gnd("gnd"){
+  SC_CTOR(fourbit_dac): vbit0("vbit0"), vbit1("vbit1"), vbit2("vbit2") , 
+      vbit3("vbit3"), vout("vout"), gnd("gnd"){
     /* First amplifier - Inverting */
-    r1->p(vin);
-    r1->n(vin_neg1);
+    r_bit0->p(vbit0);
+    r_bit1->p(vbit1);
+    r_bit2->p(vbit2);
+    r_bit3->p(vbit3);
+
+    r_bit0->n(vin_neg1);
+    r_bit1->n(vin_neg1);
+    r_bit2->n(vin_neg1);
+    r_bit3->n(vin_neg1);
+    
     r2->p(vin_neg1);
     r2->n(vout_inv);
+    
     opamp1->nip(gnd);
     opamp1->nin(vin_neg1);
     opamp1->nop(vout_inv);
     opamp1->non(gnd);
+    
     /* Second amplifier - Deinverting */
     r3->p(vout_inv);
     r3->n(vin_neg2);
+    
     r4->p(vin_neg2);
     r4->n(vout);
+    
     opamp2->nip(gnd);
     opamp2->nin(vin_neg2);
     opamp2->nop(vout);
@@ -39,11 +52,16 @@ SC_MODULE (fourbit_dac){
   }
 private:
   /* Nodes */
-	sca_eln::sca_node_ref gnd;
+  sca_eln::sca_node_ref gnd;
   sca_eln::sca_node vin_neg1, vin_neg2, vout_inv;
-  /* Resistors */
-  sca_eln::sca_r * r1 = new sca_eln::sca_r ("r1", R_REF); 
-  sca_eln::sca_r * r2 = new sca_eln::sca_r ("r2", 2*R_REF);
+  /* Bit Resistors */
+  sca_eln::sca_r * r_bit0 = new sca_eln::sca_r ("r_bit0", R_REF << 3); 
+  sca_eln::sca_r * r_bit1 = new sca_eln::sca_r ("r_bit1", R_REF << 2);
+  sca_eln::sca_r * r_bit2 = new sca_eln::sca_r ("r_bit2", R_REF << 1); 
+  sca_eln::sca_r * r_bit3 = new sca_eln::sca_r ("r_bit3", R_REF);
+  /* Feedback resistors */
+  // sca_eln::sca_r * r1 = new sca_eln::sca_r ("r1", R_REF); 
+  sca_eln::sca_r * r2 = new sca_eln::sca_r ("r2", R_REF);
   sca_eln::sca_r * r3 = new sca_eln::sca_r ("r3", R_REF); 
   sca_eln::sca_r * r4 = new sca_eln::sca_r ("r4", R_REF);
   /* OpAmps */
