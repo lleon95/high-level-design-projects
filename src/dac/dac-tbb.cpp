@@ -77,8 +77,8 @@ sc_main (int argc, char* argv[])
 
     /* Log file */
     sca_util::sca_trace_file *eln =
-    sca_util::sca_create_vcd_trace_file("dac4bit.vcd");
-    //sca_trace(eln, dut_dac->pixel, "uint_in");
+    sca_util::sca_create_vcd_trace_file("dac.vcd");
+    sca_trace(eln, dut_dac->pixel, "pixel");
     sca_trace(eln, red_channel, "red_channel");
     sca_trace(eln, green_channel, "green_channel");
     sca_trace(eln, blue_channel, "blue_channel");

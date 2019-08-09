@@ -27,7 +27,6 @@ struct digital_analog_converter : Node
     sc_signal<sc_uint<4> > b_in;
 
     /* Analog part */
-    fourbit_dac * dac4bit = new fourbit_dac("dac4bit");
     digital_dac_interface * digital_iface_r = new digital_dac_interface("digital_iface_r");
     digital_dac_interface * digital_iface_g = new digital_dac_interface("digital_iface_g");
     digital_dac_interface * digital_iface_b = new digital_dac_interface("digital_iface_b");
