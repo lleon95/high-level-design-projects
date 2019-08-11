@@ -39,9 +39,9 @@
 
 struct analogic_digital_converter : Node {
     /* I/O */
-    sc_in<sc_uint<CHANNEL_WIDTH>> red_channel;
-    sc_in<sc_uint<CHANNEL_WIDTH>> green_channel;
-    sc_in<sc_uint<CHANNEL_WIDTH>> blue_channel;
+    sc_in<sc_uint<CHANNEL_WIDTH> > red_channel;
+    sc_in<sc_uint<CHANNEL_WIDTH> > green_channel;
+    sc_in<sc_uint<CHANNEL_WIDTH> > blue_channel;
   
     void thread_process();
     void reading_process();
