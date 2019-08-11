@@ -19,9 +19,9 @@ sc_main (int argc, char* argv[])
     sc_signal<bool>  v_sync_in;
 
     /* Output signals*/
-    sc_signal<sc_uint<CHANNEL_WIDTH> > red_channel_out;
-    sc_signal<sc_uint<CHANNEL_WIDTH> > green_channel_out;
-    sc_signal<sc_uint<CHANNEL_WIDTH> > blue_channel_out;
+    sca_eln::sca_node red_channel_out;
+    sca_eln::sca_node green_channel_out;
+    sca_eln::sca_node blue_channel_out;
     sc_signal<bool>  h_sync_out;
     sc_signal<bool>  v_sync_out;
 
@@ -40,9 +40,9 @@ sc_main (int argc, char* argv[])
     decoder->v_sync(v_sync_in);
 
     /* Connect output signals to the DAC */
-    dac->red_channel(red_channel_out);
-    dac->green_channel(green_channel_out);
-    dac->blue_channel(blue_channel_out);
+    dac->r_channel(red_channel_out);
+    dac->g_channel(green_channel_out);
+    dac->b_channel(blue_channel_out);
     encoder->h_sync(h_sync_out);
     encoder->v_sync(v_sync_out);
 
@@ -66,17 +66,17 @@ sc_main (int argc, char* argv[])
     dac_router.initiator_ring->socket.bind(adc_router.target_ring->socket);
 
     /* Log file */
-    sc_trace_file *wf = sc_create_vcd_trace_file("top");
-    sc_trace(wf, red_channel_in, "red_channel_in");
-    sc_trace(wf, green_channel_in, "green_channel_in");
-    sc_trace(wf, blue_channel_in, "blue_channel_in");
-    sc_trace(wf, red_channel_out, "red_channel_out");
-    sc_trace(wf, green_channel_out, "green_channel_out");
-    sc_trace(wf, blue_channel_out, "blue_channel_out");
-    sc_trace(wf, h_sync_in, "hsync_in");
-    sc_trace(wf, v_sync_in, "vsync_in");
-    sc_trace(wf, h_sync_out, "hsync_out");
-    sc_trace(wf, v_sync_out, "vsync_out");
+    sca_util::sca_trace_file *wf = sca_util::sca_create_vcd_trace_file("top");
+    sca_trace(wf, red_channel_in, "red_channel_in");
+    sca_trace(wf, green_channel_in, "green_channel_in");
+    sca_trace(wf, blue_channel_in, "blue_channel_in");
+    sca_trace(wf, red_channel_out, "red_channel_out");
+    sca_trace(wf, green_channel_out, "green_channel_out");
+    sca_trace(wf, blue_channel_out, "blue_channel_out");
+    sca_trace(wf, h_sync_in, "hsync_in");
+    sca_trace(wf, v_sync_in, "vsync_in");
+    sca_trace(wf, h_sync_out, "hsync_out");
+    sca_trace(wf, v_sync_out, "vsync_out");
 
     /* Start the simulation, this loop emulates the sensor analogic behaviour */
     for(int i = 0; i < (ROWS_IN_SCREEN * PIXELS_IN_ROW); i++) {
@@ -98,6 +98,7 @@ sc_main (int argc, char* argv[])
     }
 
     cout << "@" << sc_time_stamp() << " Terminating simulation\n" << endl;
+    sca_util::sca_close_vcd_trace_file(wf);
     return 0;
 }
 

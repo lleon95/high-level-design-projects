@@ -1,16 +1,16 @@
 SYSTEMC_HOME=/opt/systemc
 GCC=g++
-LDFLAGS= -lsystemc
+LD_LIBRARY_PATH=$SYSTEMC_HOME/lib-linux64/
 CXXFLAGS=-Wall -Wextra
 INCLUDES=-I../router/
 
 MODULE=dac
-SOURCES=$(MODULE).cpp $(MODULE)-tbb.cpp ../router/router.cpp ../router/communication.cpp
+SOURCES=$(MODULE).cpp $(MODULE)-tbb.cpp ../router/router.cpp ../router/communication.cpp analog-4bit-dac.hpp
 
 all: $(MODULE)
 
 $(MODULE) : $(SOURCES)
-	$(GCC) $(CXXFLAGS) $(INCLUDES) $(LDFLAGS) $(shell pkg-config --cflags --libs systemc) -o $@ $^
+	$(GCC) $(CXXFLAGS) $(INCLUDES)  $^ $(shell pkg-config --cflags --libs systemc-ams) -o $@
 
 test:
 	./$(MODULE)
