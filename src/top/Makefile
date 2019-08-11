@@ -11,7 +11,7 @@ INCLUDES=-I../image-processor/  -I../dac/ -I../router/ -I../vga-decoder/ -I../vg
 all: $(PROJECT)
 
 $(PROJECT) : $(SOURCES)
-	$(GCC) $(CXXFLAGS) $(DEFINES) $(INCLUDES) $(shell pkg-config --cflags --libs systemc-ams) -o $@ $^
+	$(GCC) $(CXXFLAGS) $(DEFINES) $(INCLUDES) $^ $(shell pkg-config --cflags --libs systemc-ams) -o $@
 
 test:
 	./$(MODULE)
