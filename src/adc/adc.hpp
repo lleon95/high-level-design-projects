@@ -1,52 +1,81 @@
-//-----------------------------------------------------
-#include "systemc.h"
-#include "tlm.h"
+#include "adc_4_bits.hpp"
 #include "node.hpp"
+#include "router.hpp"
 
-#define PIXEL_SIZE 12
-#define MAX_PIXEL_VALUE_PLUS_ONE (1 << PIXEL_SIZE)
+/*
+**
+****************************************************
+**          Module description
+****************************************************
+**  3 channels analogic to digital converter
+**  See adc_4_bits.hpp for details about a single
+**  channel implementation.
+**
+***************************************************
+*/
 
-#define PIXEL_POS 0
 #define H_SYNC_POS 12
 #define V_SYNC_POS 13
+#define SHIFT_LEFT_VALUE(value, shift) (value << shift)
+#define RED_PIXEL_START 0
+#define GREEN_PIXEL_START 4
+#define BLUE_PIXEL_START 8
 
-#define ROWS_IN_FRAME 525   // Rows in a screen, not the visible ones
-#define FRAMES 1             // Frames to simulate
-#define SIMULATION_TIME (ROW_DELAY * ROWS_IN_FRAME * FRAMES) // In nano seconds
-#define H_SYNC_SYNCH_PULSE_LENGHT 96 //In pixels
-#define V_SYNC_SYNCH_PULSE_LENGHT 2  //In rows
-
-#define PIXEL_DELAY  39.722  //This is in nano secs
-#define PIXELS_IN_ROW 800
-#define ROW_DELAY (PIXEL_DELAY * PIXELS_IN_ROW) // This is in nano secs
-
-#define ADDRESSABLE_VIDEO_H_START 145
-#define ADDRESSABLE_VIDEO_H_END 784
-#define ADDRESSABLE_VIDEO_V_START 36
-#define ADDRESSABLE_VIDEO_V_END 515
-
-#define PACKAGE_LENGTH 2
-#define PACKAGE_LENGH_IN_BITS (PACKAGE_LENGTH * 8)
-#define TRANSACTION_DELAY 10 //Nano seconds
-#define CHANNEL_WIDTH 4
-#define PIXEL_WIDTH 12
-
-#ifdef DEBUG
-#define DEBUG_PIXELS 5
-#define DEBUG_H_SYNC_SYNCH_PULSE_LENGTH 2
-#endif /* DEBUG */
+/* 
+**
+***************************************************
+**                      PACKAGE
+***************************************************
+---------------------------------------------------------
+ 15 14 |   13   |   12   |  11 - 8  |  7 - 4  |  3 - 0  |  
+---------------------------------------------------------
+UNUSED | V SYNC | H SYNC |   BLUE   |  GREEN  |   RED   |
+---------------------------------------------------------
+***************************************************
+*/
 
 
-struct analogic_digital_converter : Node {
-    /* I/O */
-    sc_in<sc_uint<CHANNEL_WIDTH> > red_channel;
-    sc_in<sc_uint<CHANNEL_WIDTH> > green_channel;
-    sc_in<sc_uint<CHANNEL_WIDTH> > blue_channel;
-  
+struct analogicToDigitalConverter : Node{
+    sc_core::sc_in<double> input_red;
+    sc_core::sc_in<double> input_green;
+    sc_core::sc_in<double> input_blue;
+    sc_core::sc_out<short> output_red;
+    sc_core::sc_out<short> output_green;
+    sc_core::sc_out<short> output_blue;
+    sc_core::sc_in<bool> input_h_sync;
+    sc_core::sc_in<bool> input_v_sync;
+    analogicToDigitalConverter_4_bits *adc_channel_red;
+    analogicToDigitalConverter_4_bits *adc_channel_green;
+    analogicToDigitalConverter_4_bits *adc_channel_blue;
+
+    short digitalValue; // This models the register.
+
+    short getDigitalValue();
     void thread_process();
     void reading_process();
-    analogic_digital_converter(const sc_module_name & name) : Node(name)
-    {
-    } //End of constructor
-}; // End of adc module
+
+    analogicToDigitalConverter(const sc_module_name & name) : 
+                                            Node(name), 
+                                            input_red("Input_RED"),
+                                            input_green("Input_GREEN"),
+                                            input_blue("Input_BLUE"),
+                                            output_red("Output_RED"),
+                                            output_green("Output_GREEN"),
+                                            output_blue("Output_BLUE"),
+                                            input_h_sync("H_SYNC)"),
+                                            input_v_sync("V_SYNC)"){
+        digitalValue = 0;
+        adc_channel_red = new analogicToDigitalConverter_4_bits("channel_RED");
+        adc_channel_green = new 
+            analogicToDigitalConverter_4_bits("channel_GREEN");
+        adc_channel_blue = new 
+            analogicToDigitalConverter_4_bits("channel_BLUE");
+        adc_channel_red->input(input_red);
+        adc_channel_red->output(output_red);
+        adc_channel_green->input(input_green);
+        adc_channel_green->output(output_green);
+        adc_channel_blue->input(input_blue);
+        adc_channel_blue->output(output_blue);
+    }
+};
 
