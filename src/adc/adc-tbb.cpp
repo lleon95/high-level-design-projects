@@ -1,7 +1,7 @@
 #include "adc.hpp"
 
 #define T (5 * PIXEL_DELAY)  // Nanoseconds. Test-signal period
-#define F 1/T // Test-signal frequency. In GHz
+#define F (1 / T) // Test-signal frequency. In GHz
 
 struct dummySender : public Node {
     // Initialization done by the parent class
@@ -38,7 +38,9 @@ struct dummyReceiver : public Node {
     {
         while(true){
             wait(*(incoming_notification));
+#ifdef TRANSACTION_PRINT
             cout << "Dummy receiver: transaction received." << endl;
+#endif /* TRANSCTION_PRINT */
         }
     }
 };

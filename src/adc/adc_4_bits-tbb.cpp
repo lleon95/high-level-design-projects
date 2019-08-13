@@ -1,7 +1,7 @@
 #include "adc_4_bits.hpp"
 
 #define T (5 * PIXEL_DELAY)  // nanoseconds. Test-signal period
-#define F 1/T // Test-signal frequency. In GHz
+#define F (1 / T) // Test-signal frequency. In GHz
 
 int sc_main(int argc, char* argv[]){
     

@@ -1,3 +1,6 @@
+#ifndef _ADC_
+#define _ADC_
+
 #include "adc_4_bits.hpp"
 #include "node.hpp"
 #include "router.hpp"
@@ -78,4 +81,4 @@ struct analogicToDigitalConverter : Node{
         adc_channel_blue->output(output_blue);
     }
 };
-
+#endif /* _ADC_ */

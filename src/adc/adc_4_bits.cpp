@@ -7,7 +7,7 @@ void analogicToDigitalConverter_4_bits::processing(){
         digitalValue = VALUES;
 #ifdef DEBUG
         cout << "Input value greater than " << MAX_VOLTAGE 
-             << "Output clamped to " << VALUES << endl;
+             << ", output clamped to " << VALUES << endl;
 #endif
     }
     else if (input.read() < 0){

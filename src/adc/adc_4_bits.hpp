@@ -1,3 +1,6 @@
+#ifndef _ADC_4_BITS
+#define _ADC_4_BITS
+
 #include <systemc-ams.h>
 #include <systemc.h>
 #include <math.h>
@@ -42,4 +45,4 @@ SCA_TDF_MODULE(analogicToDigitalConverter_4_bits)
         errorMax = 0;
     }
 };
-
+#endif //_ADC_4_BITS
