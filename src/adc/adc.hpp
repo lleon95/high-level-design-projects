@@ -17,8 +17,6 @@
 ***************************************************
 */
 
-#define H_SYNC_POS 12
-#define V_SYNC_POS 13
 #define SHIFT_LEFT_VALUE(value, shift) (value << shift)
 #define RED_PIXEL_START 0
 #define GREEN_PIXEL_START 4
@@ -45,8 +43,6 @@ struct analogicToDigitalConverter : Node{
     sc_core::sc_out<short> output_red;
     sc_core::sc_out<short> output_green;
     sc_core::sc_out<short> output_blue;
-    sc_core::sc_in<bool> input_h_sync;
-    sc_core::sc_in<bool> input_v_sync;
     analogicToDigitalConverter_4_bits *adc_channel_red;
     analogicToDigitalConverter_4_bits *adc_channel_green;
     analogicToDigitalConverter_4_bits *adc_channel_blue;
@@ -64,9 +60,7 @@ struct analogicToDigitalConverter : Node{
                                             input_blue("Input_BLUE"),
                                             output_red("Output_RED"),
                                             output_green("Output_GREEN"),
-                                            output_blue("Output_BLUE"),
-                                            input_h_sync("H_SYNC)"),
-                                            input_v_sync("V_SYNC)"){
+                                            output_blue("Output_BLUE"){
         digitalValue = 0;
         adc_channel_red = new analogicToDigitalConverter_4_bits("channel_RED");
         adc_channel_green = new 

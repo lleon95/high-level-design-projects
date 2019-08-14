@@ -4,9 +4,7 @@ short analogicToDigitalConverter::getDigitalValue(){
     short temp_red   = adc_channel_red->digitalValue;
     short temp_green = adc_channel_green->digitalValue;
     short temp_blue  = adc_channel_blue->digitalValue;
-    digitalValue =      SHIFT_LEFT_VALUE(input_v_sync.read(), V_SYNC_POS) |
-                        SHIFT_LEFT_VALUE(input_h_sync.read(), H_SYNC_POS) |
-                        SHIFT_LEFT_VALUE(temp_red, RED_PIXEL_START) |
+    digitalValue =      SHIFT_LEFT_VALUE(temp_red, RED_PIXEL_START) |
                         SHIFT_LEFT_VALUE(temp_green, GREEN_PIXEL_START) |
                         SHIFT_LEFT_VALUE(temp_blue, BLUE_PIXEL_START);
     return digitalValue;
