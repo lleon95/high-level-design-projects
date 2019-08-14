@@ -1,3 +1,6 @@
+#ifndef _ROUTER_
+#define _ROUTER_
+
 /* This code includes: a router and a dummy node */
 
 #include "systemc.h"
@@ -29,3 +32,5 @@ SC_MODULE(Router)
 
   void reading_process_ring();
 };
+
+#endif /* _ROUTER_ */

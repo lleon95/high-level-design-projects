@@ -1,3 +1,6 @@
+#ifndef _VGA_DECODER_
+#define _VGA_DECODER_
+
 //-----------------------------------------------------
 #include "systemc.h"
 #include "tlm.h"
@@ -88,3 +91,4 @@ struct vga_decoder : Node {
     } //End of Constructor
 }; // End of module vga_decoder
 
+#endif /* _VGA_DECODER_ */

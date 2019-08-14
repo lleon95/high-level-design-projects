@@ -36,8 +36,8 @@ int sc_main(int argc, char* argv[]){
     sc_core::sc_signal <short>  output;
     
     // Instantiate the test modules
-    analogicToDigitalConverter* converter = new 
-        analogicToDigitalConverter("ADC");
+    analogic_digital_converter* converter = new 
+        analogic_digital_converter("ADC");
     Node* decoder = new dummyReceiver("Decoder");
     
     Router adc_router("router0", (Node *)converter);

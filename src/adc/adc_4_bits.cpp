@@ -5,14 +5,14 @@ void analogicToDigitalConverter_4_bits::processing(){
     
     if (input.read() > MAX_VOLTAGE){
         digitalValue = VALUES;
-#ifdef DEBUG
+#ifdef TRANSACTION_PRINT
         cout << "Input value greater than " << MAX_VOLTAGE 
              << ", output clamped to " << VALUES << endl;
 #endif
     }
     else if (input.read() < 0){
         digitalValue = 0;
-#ifdef DEBUG
+#ifdef TRANSACTION_PRINT
         cout << "Negative input value. Output clamped to 0" << endl;
 #endif
     }
@@ -22,7 +22,7 @@ void analogicToDigitalConverter_4_bits::processing(){
     }
     digitalValue = digitalValue & 0xF; // To ensure a 4-bits value
     aprox = digitalValue * step;
-#ifdef DEBUG
+#ifdef TRANSACTION_PRINT
     cout << "Input value: " << input.read() << " @ " << sc_time_stamp() 
          << endl;
     cout << "ADC conversion value: 0x" << hex << digitalValue << " @ " 

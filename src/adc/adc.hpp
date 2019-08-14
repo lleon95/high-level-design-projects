@@ -36,7 +36,7 @@ UNUSED | V SYNC | H SYNC |   BLUE   |  GREEN  |   RED   |
 */
 
 
-struct analogicToDigitalConverter : Node{
+struct analogic_digital_converter : Node{
     sc_core::sc_in<double> input_red;
     sc_core::sc_in<double> input_green;
     sc_core::sc_in<double> input_blue;
@@ -53,7 +53,7 @@ struct analogicToDigitalConverter : Node{
     void thread_process();
     void reading_process();
 
-    analogicToDigitalConverter(const sc_module_name & name) : 
+    analogic_digital_converter(const sc_module_name & name) : 
                                             Node(name), 
                                             input_red("Input_RED"),
                                             input_green("Input_GREEN"),

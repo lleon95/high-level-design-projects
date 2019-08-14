@@ -12,11 +12,16 @@ int
 sc_main (int argc, char* argv[])
 {
     /* Input signals */
-    sc_signal<sc_uint<CHANNEL_WIDTH> > red_channel_in;
-    sc_signal<sc_uint<CHANNEL_WIDTH> > green_channel_in;
-    sc_signal<sc_uint<CHANNEL_WIDTH> > blue_channel_in;
+    sc_core::sc_signal <double> input_red;
+    sc_core::sc_signal <double> input_green;
+    sc_core::sc_signal <double> input_blue;
     sc_signal<bool>  h_sync_in;
     sc_signal<bool>  v_sync_in;
+
+    /* ADC output*/
+    sc_core::sc_signal <short>  output_red;
+    sc_core::sc_signal <short>  output_green;
+    sc_core::sc_signal <short>  output_blue;
 
     /* Output signals*/
     sca_eln::sca_node red_channel_out;
@@ -33,9 +38,13 @@ sc_main (int argc, char* argv[])
     digital_analog_converter* dac =  new digital_analog_converter("DAC");
 
     /* Connect input signals to ADC */
-    adc->red_channel(red_channel_in);
-    adc->green_channel(green_channel_in);
-    adc->blue_channel(blue_channel_in);
+    adc->input_red(input_red);
+    adc->input_green(input_green);
+    adc->input_blue(input_blue);
+    adc->output_red(output_red);
+    adc->output_green(output_green);
+    adc->output_blue(output_blue);
+    
     decoder->h_sync(h_sync_in);
     decoder->v_sync(v_sync_in);
 
@@ -67,10 +76,10 @@ sc_main (int argc, char* argv[])
 
     /* Log file */
     sca_util::sca_trace_file *wf = sca_util::sca_create_vcd_trace_file("top");
-    sca_trace(wf, red_channel_in, "red_channel_in");
-    sca_trace(wf, green_channel_in, "green_channel_in");
-    sca_trace(wf, blue_channel_in, "blue_channel_in");
-    sca_trace(wf, red_channel_out, "red_channel_out");
+    sca_trace(wf, input_red, "input_red");
+    sca_trace(wf, input_green, "green_channel_in");
+    sca_trace(wf, input_blue, "blue_channel_in");
+    sca_trace(wf, input_red, "red_channel_out");
     sca_trace(wf, green_channel_out, "green_channel_out");
     sca_trace(wf, blue_channel_out, "blue_channel_out");
     sca_trace(wf, h_sync_in, "hsync_in");
@@ -90,14 +99,16 @@ sc_main (int argc, char* argv[])
         } else {
             v_sync_in = 0;
         }
-
-        red_channel_in.write(rand() % (1 << CHANNEL_WIDTH));
-        green_channel_in.write(rand() % (1 << CHANNEL_WIDTH));
-        blue_channel_in.write(rand() % (1 << CHANNEL_WIDTH));
+	input_red.write((MAX_VOLTAGE / 2.00) * (sin(2 * M_PI * i) + 1));
+        input_green.write((MAX_VOLTAGE / 2.00) * 
+                          (sin((2 * M_PI * i) + M_PI / 2) + 1));
+        input_blue.write((MAX_VOLTAGE / 2.00) * 
+                         (sin((2 * M_PI * i) + M_PI) + 1));
         sc_start(PIXEL_DELAY, SC_NS);
     }
-
     cout << "@" << sc_time_stamp() << " Terminating simulation\n" << endl;
+
+    
     sca_util::sca_close_vcd_trace_file(wf);
     return 0;
 }

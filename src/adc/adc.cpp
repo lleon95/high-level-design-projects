@@ -1,6 +1,6 @@
 #include "adc.hpp"
 
-short analogicToDigitalConverter::getDigitalValue(){
+short analogic_digital_converter::getDigitalValue(){
     short temp_red   = adc_channel_red->digitalValue;
     short temp_green = adc_channel_green->digitalValue;
     short temp_blue  = adc_channel_blue->digitalValue;
@@ -10,7 +10,7 @@ short analogicToDigitalConverter::getDigitalValue(){
     return digitalValue;
 }
 
-void analogicToDigitalConverter::thread_process()
+void  analogic_digital_converter::thread_process()
 {
     while(true) {
         short data = getDigitalValue();
@@ -22,7 +22,7 @@ void analogicToDigitalConverter::thread_process()
     }
 }
 
-void analogicToDigitalConverter::reading_process()
+void analogic_digital_converter::reading_process()
 {
     while(true) {
         wait(*(incoming_notification));
