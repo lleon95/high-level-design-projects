@@ -27,11 +27,16 @@ apply_sobel (sc_uint<CHANNEL_WIDTH> pixel_buffer[], int pixel_index)
     /* Copy pixels to window buffer */
     for (int i = 0; i < 3; i++) {
         for( int j = 0; j < 3; j++) {
-            int index = (pixel_index + (i - 1) * WIDTH + (j - 1));
+            int index = (pixel_index + (i - 2) * WIDTH + (j - 2));
 
-            if(index > 0 && index < BUFFER_SIZE) {
+            if(index < BUFFER_SIZE && index >= 0) {
                 pixel_window[i][j] = pixel_buffer[index];
-            } else {
+            }
+	    else if (index < 0) {
+	      index += BUFFER_SIZE;
+	      pixel_window[i][j] = pixel_buffer[index];
+	    }
+	    else {
                 pixel_window[i][j] = 0;
             }
         }

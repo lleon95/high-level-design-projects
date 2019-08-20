@@ -76,10 +76,10 @@ sc_main (int argc, char* argv[])
 
     /* Log file */
     sca_util::sca_trace_file *wf = sca_util::sca_create_vcd_trace_file("top");
-    sca_trace(wf, input_red, "input_red");
+    sca_trace(wf, input_red, "red_channel_in");
     sca_trace(wf, input_green, "green_channel_in");
     sca_trace(wf, input_blue, "blue_channel_in");
-    sca_trace(wf, input_red, "red_channel_out");
+    sca_trace(wf, red_channel_out, "red_channel_out");
     sca_trace(wf, green_channel_out, "green_channel_out");
     sca_trace(wf, blue_channel_out, "blue_channel_out");
     sca_trace(wf, h_sync_in, "hsync_in");
@@ -88,23 +88,31 @@ sc_main (int argc, char* argv[])
     sca_trace(wf, v_sync_out, "vsync_out");
 
     /* Start the simulation, this loop emulates the sensor analogic behaviour */
-    for(int i = 0; i < (ROWS_IN_SCREEN * PIXELS_IN_ROW); i++) {
-        if((i % PIXELS_IN_ROW) == 0) { /* Signal new row */
+    for(int i = 0; i < ROWS_IN_SCREEN; i++) {
+      for(int j = 0; j < PIXELS_IN_ROW; j++) {
+        if(j == 0) { /* Signal new row */
             h_sync_in = 1;
         } else {
             h_sync_in = 0;
         }
-        if((i % (PIXELS_IN_ROW * ROWS_IN_SCREEN)) == 0) { /* Signal new row */
+        if(i == 0) { /* Signal new row */
             v_sync_in = 1;
         } else {
             v_sync_in = 0;
         }
-	input_red.write((MAX_VOLTAGE / 2.00) * (sin(2 * M_PI * i) + 1));
-        input_green.write((MAX_VOLTAGE / 2.00) * 
-                          (sin((2 * M_PI * i) + M_PI / 2) + 1));
-        input_blue.write((MAX_VOLTAGE / 2.00) * 
-                         (sin((2 * M_PI * i) + M_PI) + 1));
+
+	if((i > 250) && (i < 350 ) && (j >  350) && (j < 450)){
+	  input_red.write(MAX_VOLTAGE);
+	  input_green.write(MAX_VOLTAGE);
+	  input_blue.write(MAX_VOLTAGE);
+	}
+	else {
+	  input_red.write(0);
+	  input_green.write(0);
+	  input_blue.write(0);
+	}
         sc_start(PIXEL_DELAY, SC_NS);
+      }
     }
     cout << "@" << sc_time_stamp() << " Terminating simulation\n" << endl;
 
