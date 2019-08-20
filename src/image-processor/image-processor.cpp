@@ -27,11 +27,16 @@ apply_sobel (sc_uint<CHANNEL_WIDTH> pixel_buffer[], int pixel_index)
     /* Copy pixels to window buffer */
     for (int i = 0; i < 3; i++) {
         for( int j = 0; j < 3; j++) {
-            int index = (pixel_index + (i - 1) * WIDTH + (j - 1));
+            int index = (pixel_index + (i - 2) * WIDTH + (j - 2));
 
-            if(index > 0 && index < BUFFER_SIZE) {
+            if(index < BUFFER_SIZE && index >= 0) {
                 pixel_window[i][j] = pixel_buffer[index];
-            } else {
+            }
+	    else if (index < 0) {
+	      index += BUFFER_SIZE;
+	      pixel_window[i][j] = pixel_buffer[index];
+	    }
+	    else {
                 pixel_window[i][j] = 0;
             }
         }
@@ -76,7 +81,10 @@ image_processor::thread_process()
 {
     while(true) {
         wait(_pixel_ready);
+	
+#ifdef TRANSACTION_PRINT
         cout << "CPU writing:\t" << current_pixel << " @ " << sc_time_stamp() << endl;
+#endif /* TRANSACTION_PRINT */
 
         initiator->write(ENCODER_ADDRESS, (int)current_pixel, tlm::TLM_WRITE_COMMAND);
     }
@@ -93,8 +101,11 @@ image_processor::reading_process()
 
         if(command == tlm::TLM_WRITE_COMMAND) {
             current_pixel = data & 0xFFF;
+	    
+#ifdef TRANSACTION_PRINT
             cout << "CPU received:\t" << current_pixel << " @ " << sc_time_stamp() << endl;
-
+#endif /* TRANSACTION_PRINT */
+	    
             /* Convert pixel to gray and save to buffer */
             pixel_buffer[pixel_index] = convert_to_grayscale( current_pixel );
 

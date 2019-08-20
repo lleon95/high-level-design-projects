@@ -2,6 +2,18 @@
 
 #include "vga_decoder.hpp"
 
+#define ROWS_IN_FRAME 525
+#define ROW_DELAY (PIXEL_DELAY * PIXELS_IN_ROW) // This is in nano secs
+#define UPDATE_OUTPUT_DELAY 10 //nanoseconds
+#define SAMPLING_DELAY 10 //nanoseconds
+#define ADDRESSABLE_VIDEO_H_START 145
+#define ADDRESSABLE_VIDEO_H_END 784
+#define ADDRESSABLE_VIDEO_V_START 36
+#define ADDRESSABLE_VIDEO_V_END 515
+
+#define PACKAGE_SIZE_IN_BYTES 2
+#define PACKAGE_LENGTH_IN_BITS (PACKAGE_SIZE_IN_BYTES * 8)
+
 //------------Code Starts Here-------------------------
 void
 vga_decoder::start_column_count()
@@ -22,21 +34,13 @@ vga_decoder::decode_pixel()
 {
     while(true) {
         wait(decode_pixel_event);
-#ifdef DEBUG
-        if (h_count >= DEBUG_ADDRESSABLE_VIDEO_H_START) {
-#else
         if (((h_count >= ADDRESSABLE_VIDEO_H_START) &&
                 (h_count <= ADDRESSABLE_VIDEO_H_END))   && //Addressable horizontal
                 ((v_count >= ADDRESSABLE_VIDEO_V_START) && //Addressable vertical
                  (v_count <= ADDRESSABLE_VIDEO_V_END))) {
-#endif
-#ifdef DEBUG
             if (pixels_transmitted < DEBUG_MAX_PIXELS_TO_SEND) {
-#endif
                 sample_pixel_event.notify(SAMPLING_DELAY, SC_NS);
-#ifdef DEBUG
             }
-#endif
         }
     }
 }
@@ -85,13 +89,11 @@ vga_decoder::thread_process()
 {
     while(true) {
         wait(update_output_event);
+#ifdef TRANSACTION_PRINT
         cout << "Decoder sending:\t" << pixel << " @ " << sc_time_stamp() << endl;
-
+#endif /* TRANSACTION_PRINT */
         initiator->write(CPU_ADDRESS, (int)pixel, tlm::TLM_WRITE_COMMAND);
         wait(sc_time(BUS_DELAY, SC_NS));
-#ifdef DEBUG
-        pixels_transmitted++;
-#endif
     }
 }
 
@@ -104,20 +106,20 @@ vga_decoder::reading_process()
         unsigned short data = target->incoming_buffer;
 
         if (cmd == tlm::TLM_WRITE_COMMAND) {
+#ifdef TRANSACTION_PRINT
             cout << "Decoder received:\t" << data << " @ " << sc_time_stamp() << endl;
+#endif /* TRANSACTION_PRINT */
             pixel_in = GET_PIXEL(data);
-            current_h_sync = GET_H_SYNC(data);
-            current_v_sync = GET_V_SYNC(data);
-            if ((current_h_sync == 0) && (previous_h_sync == 1)) { //Falling egde in h sync
+            if ((h_sync == 0) && (previous_h_sync == 1)) { //Falling egde in h sync
                 start_column_count();
             }
 
-            if ((current_v_sync == 0) && (previous_v_sync == 1)) { //Falling egde in v sync
+            if ((v_sync == 0) && (previous_v_sync == 1)) { //Falling egde in v sync
                 start_row_count();
             }
 
-            previous_h_sync = current_h_sync;
-            previous_v_sync = current_v_sync;
+            previous_h_sync = h_sync;
+            previous_v_sync = v_sync;
         }
     }
 }

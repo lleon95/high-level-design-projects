@@ -1,21 +1,20 @@
 SYSTEMC_HOME=/opt/systemc
 GCC=g++
-LDFLAGS= -lsystemc
+LD_LIBRARY_PATH=$SYSTEMC_HOME/lib-linux64/
 CXXFLAGS=-Wall -Wextra
-DEFINES=-DDEBUG
+INCLUDES=-I../vga-decoder/ -I../router/
 
 MODULE=adc
-SOURCES=$(MODULE).cpp $(MODULE)_tbb.cpp ../router/router.cpp
-INCLUDES=-I../router/
-
+SOURCES=$(MODULE).cpp $(MODULE)-tbb.cpp adc_4_bits.cpp ../router/router.cpp ../router/communication.cpp
 
 all: $(MODULE)
 
 $(MODULE) : $(SOURCES)
-	$(GCC) $(CXXFLAGS) $(INCLUDES) $(DEFINES) $(LDFLAGS) -o $@ $^
+	$(GCC) $(CXXFLAGS) $(INCLUDES)  $^ $(shell pkg-config --cflags --libs systemc-ams) -o $@
 
 test:
 	./$(MODULE)
 
 clean:
-	rm -f $(MODULE)
+	rm -f $(MODULE) $(MODULE).vcd
+

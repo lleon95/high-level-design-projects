@@ -5,7 +5,7 @@ INCLUDES= -I$(SYSTEMC_HOME)/include
 CXXFLAGS=-Wall -Wextra -g -o0
 
 MODULE=router
-SOURCES=dummy-node.cpp communication.hpp router.cpp router-tbb.cpp dummy-node.cpp
+SOURCES=dummy-node.cpp communication.cpp router.cpp router-tbb.cpp dummy-node.cpp
 
 .PHONY: all clean
 

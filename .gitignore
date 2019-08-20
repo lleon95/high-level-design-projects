@@ -353,10 +353,15 @@ TSWLatexianTemp*
 *.orig
 
 #Binary files
-image_processor
+image-processor
 memory
 vga_decoder
-vga_encoder
+vga-encoder
+top
+adc
+dac
+router
+
 
 
 # End of https://www.gitignore.io/api/c++,latex,emacs
