@@ -17,9 +17,24 @@ Basically, this project is composed of the following parts:
 
 3. **VGA encoder**: Retrieves the image from the stream (or memory) and streams it to a Digital-to-Analog converter, which will transform the digital signals into analog signals.
 
-##Requirements
+## Requirements
+
 * G++ compiler
 * SystemC libraries (install using ´sudo apt install libsystemc-dev´)
 * GTKwave for vcd test waveform visualization
+
+## Compilation
+
+```bash
+cd src
+make
+```
+
+> You may need to have the SystemC library installed on your computer and modify 
+the construction system to get it work. 
+
+## Disclaimer
+
+This code is intended for learning purposes. We are not responsible for its misuse.
 
 I Quarter - 2019
